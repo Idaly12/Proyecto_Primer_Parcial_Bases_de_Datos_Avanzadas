@@ -28,7 +28,7 @@ def create_user(name, email):
         cur.execute( 
             "INSERT INTO users (name, emali, password) VALUES (:name, :email, password)",
             {"name": name, "email": email, "password": password}
-            
+        )
         conn.commit()
         print(f"Usuario creado")
         return output_id.getvalue()
@@ -96,5 +96,6 @@ def main_menu():
 
 if __name__ == "__main__":
     main_menu()
+
 
 
