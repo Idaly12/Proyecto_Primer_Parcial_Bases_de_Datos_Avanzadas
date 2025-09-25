@@ -1,5 +1,10 @@
 import oracledb
 import getpass
+from rich.console import Console
+from rich.panel import Panel
+from rich.prompt import Prompt
+
+console = Console()
 
 # Configuración de la conexión
 DB_USER = "proyecto"
@@ -28,67 +33,66 @@ def create_user(username, email, password):
     try:
         cur.callproc("add_user", [username, email, password])
         conn.commit()
-        print("Usuario creado correctamente")
+        console.print("[green]Usuario creado correctamente[/green]")
     except Exception as e:
-        print("Error al crear usuario:", e)
+        console.print(f"[red]Error al crear usuario: {e}[/red]")
     finally:
         cur.close()
         conn.close()
 
 def login_user():
     """Login de usuario existente"""
-    correo = input("Ingresa tu email: ")
+    console.print(Panel("[bold cyan]LOGIN[/bold cyan]", expand=False))
+    correo = Prompt.ask("Ingresa tu email: ")
 
     if "@gmail.com" not in correo:
-        print("No es un correo válido")
+        console.print("[red]No es un correo válido[/red]")
         return
 
     usuario = user_exists(correo)
     if usuario:
         password_input = getpass.getpass("Ingresa la contraseña: ")
         if password_input == usuario[3]:  # contraseña
-            print(f"Hola {usuario[1]}")
+            console.print(f"[green]Hola {usuario[1]}[/green]")
         else:
-            print("Contraseña incorrecta")
+            console.print("[red]Contraseña incorrecta[/red]")
     else:
-        print("Usuario no encontrado")
+        console.print("[red]Usuario no encontrado[/red]")
 
 def register_user():
     """Registro de nuevo usuario"""
-    nombre = input("Ingresa tu nombre: ")
-    correo = input("Ingresa tu email: ")
+    console.print(Panel("[bold magenta]REGISTRO[/bold magenta]", expand=False))
+    nombre = Prompt.ask("Ingresa tu nombre: ")
+    correo = Prompt.ask("Ingresa tu email: ")
 
     if "@gmail.com" not in correo:
-        print("Correo no válido")
+        console.print("[red]Correo no válido[/red]")
         return
 
     usuario = user_exists(correo)
     if usuario:
-        print("Email ya existente")
+        console.print("[yellow]Email ya existente[/yellow]")
     else:
         password = getpass.getpass("Crea tu contraseña: ")
         password_confirmar = getpass.getpass("Confirma la contraseña: ")
         if password != password_confirmar:
-            print("Las contraseñas no son iguales")
+            console.print("[red]Las contraseñas no son iguales[/red]")
             return
         create_user(nombre, correo, password)
 
 def main_menu():
     while True:
-        print("\n=== MENÚ PRINCIPAL ===")
-        print("1. Login")
-        print("2. Registrarse")
-        print("3. Salir")
-        opcion = input("Selecciona una opción (1-3): ")
-
+        console.print(Panel("[bold blue]MENÚ PRINCIPAL[/bold blue]\n1. Login\n2. Registrarse\n3. Salir", expand=False))
+        opcion = Prompt.ask("Selecciona una opción", choices=["1", "2", "3"])
+        
         if opcion == "1":
             login_user()
         elif opcion == "2":
             register_user()
         elif opcion == "3":
+            console.print("[bold green] saliendo [bold green]")
+            
             break
-        else:
-            print("Opción inválida")
-
 if __name__ == "__main__":
     main_menu()
+
