@@ -19,8 +19,8 @@ Ejecutable para la administraccion de un blog, Permite administrar usuarios, art
 
 1.  **Clonar el Repositorio (si aplica):**
     ```bash
-    git clone https://github.com/emilianopime/Proyecto-bases-gym.git
-    cd Proyecto-bases-gym
+    git clone git@github.com:Idaly12/Proyecto_Primer_Parcial_Bases_de_Datos_Avanzadas.git
+    cd Proyecto_Primer_Parcial_Bases_De_Datos_Avanzadas
     ```
 
 2.  **Configurar la Base de Datos Oracle:**
@@ -32,6 +32,7 @@ Ejecutable para la administraccion de un blog, Permite administrar usuarios, art
             ```
 
 3.  **Configurar la Conexión a la Base de Datos en la Aplicación:**
+    * Es ecesario intalar Oracle con **pip install cx_Oracle**, para poder hacer la conexión en Python 
     *   Edita el archivo `src/config/dbconfig.js` con tus credenciales y detalles de conexión a Oracle:
         ```javascript
         // src/config/dbconfig.js
@@ -42,13 +43,13 @@ Ejecutable para la administraccion de un blog, Permite administrar usuarios, art
         };
         ```
 
-4.  **Instalar Dependencias del Proyecto:**
+5.  **Instalar Dependencias del Proyecto:**
     Abre una terminal en la raíz del proyecto (`Proyecto-bases-gym-main`) y ejecuta:
     ```bash
     npm install
     ```
 
-5.  **Crear Usuarios de Prueba/Administrador:**
+6.  **Crear Usuarios de Prueba/Administrador:**
     *   **Opción A (Recomendado - Usando scripts provistos):**
         *   **Para un usuario de prueba 'testuser' (contraseña: 'temp123'):**
             El script `insertTestUser.js` está diseñado para crear o actualizar un usuario específico llamado `testuser` con la contraseña `temp123` y correo `testuser@gym.com`.
@@ -77,14 +78,14 @@ Ejecutable para la administraccion de un blog, Permite administrar usuarios, art
         COMMIT;
         ```
 
-6.  **Ejecutar la Aplicación:**
+7.  **Ejecutar la Aplicación:**
     Una vez que la base de datos esté configurada y las dependencias instaladas, inicia el servidor Node.js:
     ```bash
     npm start
     ```
     La aplicación debería estar corriendo en `http://localhost:3000` (o el puerto configurado en `src/app.js`).
 
-7.  **Acceder a la Aplicación:**
+8.  **Acceder a la Aplicación:**
     Abre tu navegador web y ve a `http://localhost:3000/HTML/login.html`.
     Intenta iniciar sesión con el usuario `testuser` (contraseña: `temp123`) o el usuario administrador que hayas configurado.
 
