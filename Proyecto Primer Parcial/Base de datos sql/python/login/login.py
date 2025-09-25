@@ -3,9 +3,7 @@ import getpass
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
-
 console = Console()
-
 # Configuración de la conexión
 DB_USER = "proyecto"
 DB_PASS = "proyecto"
