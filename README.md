@@ -12,10 +12,12 @@ Ejecutable para la administraccion de un blog, Permite administrar usuarios, art
 ## Requisitos Previos
 
 *   **Node.js y npm:** Asegúrate de tener Node.js instalado. Puedes descargarlo desde [nodejs.org](https://nodejs.org/). npm viene incluido con Node.js.
-*   **Instalar la libreria de rich** instalarlo mediante bash o cmd dependiendo del sistema operativo.
+*   **Instalar la libreria de rich.** instalarlo mediante bash o cmd dependiendo del sistema operativo.
+*  linux
       ```bash
     python3 -m pip install rich
      ```
+*   windows
       ```cmd
     python -m pip install rich
       ```    
