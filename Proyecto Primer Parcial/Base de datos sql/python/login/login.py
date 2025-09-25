@@ -1,5 +1,5 @@
 import oracledb
-import oracle getpass #este es pa las contrasenas
+import getpass #este es pa las contrasenas
 # Configuración de la conexión
 DB_USER = "system"   #cambia aqui tu usuario y contrasena del sql para que jale 
 DB_PASS = "123"
@@ -96,4 +96,5 @@ def main_menu():
 
 if __name__ == "__main__":
     main_menu()
+
 
