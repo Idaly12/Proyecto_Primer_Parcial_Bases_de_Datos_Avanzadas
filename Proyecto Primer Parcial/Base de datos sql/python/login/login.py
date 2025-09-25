@@ -1,5 +1,5 @@
 import oracledb
-
+import oracle getpass #este es pa las contrasenas
 # Configuración de la conexión
 DB_USER = "system"   #cambia aqui tu usuario y contrasena del sql para que jale 
 DB_PASS = "123"
@@ -24,8 +24,11 @@ def create_user(name, email):
     conn = get_connection()
     cur = conn.cursor()
     try:
-        output_id = cur.var(oracledb.NUMBER)
-        cur.callproc("blog_pkg.create_user", [name, email, output_id])
+        #parte de la contrasena
+        cur.execute( 
+            "INSERT INTO users (name, emali, password) VALUES (:name, :email, password)",
+            {"name": name, "email": email, "password": password}
+            
         conn.commit()
         print(f"Usuario creado")
         return output_id.getvalue()
@@ -37,7 +40,7 @@ def create_user(name, email):
 
 def login_user():
     """EL USUARIO YA EXISTE"""
-    correo = input("Ingresa tu email: 1")
+    correo = input("Ingresa tu email: ")
 
     if "@gmail.com" not in correo:
         print("no es un correo valido ")
@@ -45,9 +48,14 @@ def login_user():
 
     usuario = user_exists(correo)
     if usuario:
-        print(f"ola, {usuario[1]}")
+        password_input = getpass.getpass("ingresa la contraseña: ")
+        if password_input == usuario[3]: #hablamos de la contraseña aqui
+            print (f"hola{usuario [1]}")
+            
     else:
-        print("Usuario no encontrado. Primero debes registrarte.")
+        print("contraseña incorrecta")
+    else:
+    print("usuario no encontrdo" )
 
 def register_user():
     """Registro de un nuevo usuario"""
@@ -62,7 +70,12 @@ def register_user():
     if usuario:
         print(f"email ya existente ")
     else:
-        create_user(nombre, correo)
+        password = getpass.getpass("crea tu contraseña: ")
+        password_confirmar = getpass.getpass("confirma la contrseña: ")
+            if password != password_confirmar:
+                print(" las contraseñas no son iguales")
+                return 
+                create_user(nombre, correo, password) 
 
 def main_menu():
     while True:
@@ -83,3 +96,4 @@ def main_menu():
 
 if __name__ == "__main__":
     main_menu()
+
