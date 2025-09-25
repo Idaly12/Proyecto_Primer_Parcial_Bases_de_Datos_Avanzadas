@@ -1,6 +1,6 @@
 import oracledb
 import getpass
-
+#Push de prueba
 # Configuración de la conexión
 DB_USER = "proyecto"
 DB_PASS = "proyecto"
