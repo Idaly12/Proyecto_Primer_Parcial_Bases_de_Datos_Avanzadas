@@ -1,81 +1,77 @@
 import oracledb
-import getpass #este es pa las contrasenas
+import getpass
+
 # Configuración de la conexión
-DB_USER = "system"   #cambia aqui tu usuario y contrasena del sql para que jale 
-DB_PASS = "123"
-DB_DSN = "localhost/XEPDB1"   
+DB_USER = "proyecto"
+DB_PASS = "proyecto"
+DB_DSN = "localhost/XEPDB1"
 
 def get_connection():
-    """AQUI SE CONECTA CON EL SQL"""
+    """Conexión con Oracle"""
     return oracledb.connect(user=DB_USER, password=DB_PASS, dsn=DB_DSN)
 
 def user_exists(email):
-    """VERIFICACION"""
+    """Verifica si un usuario existe por email"""
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT id, name, email FROM users WHERE email = :email", {"email": email})
+    # Seleccionamos todas las columnas relevantes
+    cur.execute("SELECT user_id, username, email, password FROM users WHERE email = :email", {"email": email})
     row = cur.fetchone()
     cur.close()
     conn.close()
-    return row
+    return row  # None si no existe
 
-def create_user(name, email):
-    """Crea un nuevo usuario"""
+def create_user(username, email, password):
+    """Crea un nuevo usuario usando el procedimiento add_user"""
     conn = get_connection()
     cur = conn.cursor()
     try:
-        #parte de la contrasena
-        cur.execute( 
-            "INSERT INTO users (name, emali, password) VALUES (:name, :email, password)",
-            {"name": name, "email": email, "password": password}
-        )
+        cur.callproc("add_user", [username, email, password])
         conn.commit()
-        print(f"Usuario creado")
-        return output_id.getvalue()
+        print("Usuario creado correctamente")
     except Exception as e:
-        print("Error al crear usuario", e)
+        print("Error al crear usuario:", e)
     finally:
         cur.close()
         conn.close()
 
 def login_user():
-    """EL USUARIO YA EXISTE"""
+    """Login de usuario existente"""
     correo = input("Ingresa tu email: ")
 
     if "@gmail.com" not in correo:
-        print("no es un correo valido ")
+        print("No es un correo válido")
         return
 
     usuario = user_exists(correo)
     if usuario:
-        password_input = getpass.getpass("ingresa la contraseña: ")
-        if password_input == usuario[3]: #hablamos de la contraseña aqui
-            print (f"hola{usuario [1]}")
-            
+        password_input = getpass.getpass("Ingresa la contraseña: ")
+        if password_input == usuario[3]:  # contraseña
+            print(f"Hola {usuario[1]}")
+        else:
+            print("Contraseña incorrecta")
     else:
-        print("contraseña incorrecta")
-    else:
-    print("usuario no encontrdo" )
+        print("Usuario no encontrado")
 
 def register_user():
-    """Registro de un nuevo usuario"""
+    """Registro de nuevo usuario"""
     nombre = input("Ingresa tu nombre: ")
     correo = input("Ingresa tu email: ")
 
     if "@gmail.com" not in correo:
-        print("correo no valido")
+        print("Correo no válido")
         return
 
     usuario = user_exists(correo)
     if usuario:
-        print(f"email ya existente ")
+        print("Email ya existente")
     else:
-        password = getpass.getpass("crea tu contraseña: ")
-        password_confirmar = getpass.getpass("confirma la contrseña: ")
-            if password != password_confirmar:
-                print(" las contraseñas no son iguales")
-                return 
-                create_user(nombre, correo, password) 
+        password = getpass.getpass("Crea tu contraseña: ")
+        password_confirmar = getpass.getpass("Confirma la contraseña: ")
+        if password != password_confirmar:
+            print("Las contraseñas no son iguales")
+            return
+        create_user(nombre, correo, password)
 
 def main_menu():
     while True:
@@ -92,10 +88,7 @@ def main_menu():
         elif opcion == "3":
             break
         else:
-            print("Opción invalida")
+            print("Opción inválida")
 
 if __name__ == "__main__":
     main_menu()
-
-
-
