@@ -4,10 +4,18 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
 console = Console()
-# Configuración de la conexión
-DB_USER = "proyecto"
-DB_PASS = "proyecto"
+
+
+DB_USER = "proyectob"
+DB_PASS = "proyectob"
 DB_DSN = "localhost/XEPDB1"
+
+
+
+#Configuración de la conexión Idaly
+#DB_USER = "proyecto"
+#DB_PASS = "proyecto"
+#DB_DSN = "localhost/XEPDB1" 
 
 def get_connection():
     """Conexión con Oracle"""
@@ -78,6 +86,8 @@ def register_user():
             return
         create_user(nombre, correo, password)
 
+
+ 
 def main_menu():
     while True:
         console.print(Panel("[bold blue]MENÚ PRINCIPAL[/bold blue]\n1. Login\n2. Registrarse\n3. Salir", expand=False))
@@ -94,3 +104,53 @@ def main_menu():
 if __name__ == "__main__":
     main_menu()
 
+
+    """Muestra el menú de opciones después de un login exitoso."""
+    user_id = user_data[0]
+    username = user_data[1]
+
+    while True:
+        console.print(Panel(f"[bold yellow]Bienvenido, {username}![/bold yellow]\n\n1. Ver mis artículos\n2. Crear nuevo artículo\n3. Actualizar un artículo\n4. Eliminar un artículo\n5. Volver al menú principal (Logout)", title="Menú de Artículos"))
+        opcion = Prompt.ask("Selecciona una opción", choices=["1", "2", "3", "4", "5"])
+
+        if opcion == "1":
+            # Función para ver artículos (la haremos después)
+            console.print("[cyan]Funcionalidad 'Ver mis artículos' pendiente.[/cyan]")
+            pass
+        elif opcion == "2":
+            # --- INICIO DE LA INTEGRACIÓN ---
+            console.print(Panel("[bold cyan]NUEVO ARTÍCULO[/bold cyan]", expand=False))
+            
+            # Pedimos los datos al usuario
+            article_title = Prompt.ask("Título del artículo")
+            
+            # Pedimos el contenido del artículo. El usuario puede escribir varias líneas.
+            # Termina de escribir cuando presiona Ctrl+D (en Linux/Mac) o Ctrl+Z (en Windows).
+            console.print("Escribe el contenido de tu artículo (Ctrl+D o Ctrl+Z para finalizar):")
+            article_content_lines = []
+            try:
+                while True:
+                    line = input()
+                    article_content_lines.append(line)
+            except EOFError:
+                pass # Se presionó la combinación de teclas para finalizar
+
+            article_content = "\n".join(article_content_lines)
+
+            # Validamos que el contenido no esté vacío
+            if not article_content.strip():
+                console.print("[bold red]El contenido del artículo no puede estar vacío.[/bold red]")
+            else:
+                # Llamamos a la función para crear el artículo, pasándole el user_id
+                create_article(article_title, article_content, user_id)
+            # --- FIN DE LA INTEGRACIÓN ---
+            
+        elif opcion == "3":
+            console.print("[cyan]Funcionalidad 'Actualizar un artículo' pendiente.[/cyan]")
+            pass
+        elif opcion == "4":
+            console.print("[cyan]Funcionalidad 'Eliminar un artículo' pendiente.[/cyan]")
+            pass
+        elif opcion == "5":
+            console.print("[bold yellow]Cerrando sesión...[/bold yellow]")
+            break

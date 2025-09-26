@@ -2,11 +2,16 @@ import oracledb
 import tkinter as tk
 from tkinter import messagebox, simpledialog, Toplevel, Label, Entry, Button, StringVar
 
-# Configuración de la conexión
-DB_USER = "bases"
-DB_PASS = "bases"
+DB_USER = "proyectob"
+DB_PASS = "proyectob"
 DB_DSN = "localhost/XEPDB1"
 
+
+
+#Configuración de la conexión Idaly
+#DB_USER = "proyecto"
+#DB_PASS = "proyecto"
+#DB_DSN = "localhost/XEPDB1" 
 def get_connection():
     return oracledb.connect(user=DB_USER, password=DB_PASS, dsn=DB_DSN)
 
