@@ -1,20 +1,16 @@
 import oracledb
 import tkinter as tk
-from tkinter import messagebox, simpledialog, Toplevel, Label, Entry, Button, StringVar
+from tkinter import messagebox, Toplevel, Label, Entry, Button, StringVar, Frame, Listbox, Scrollbar, END
 
-DB_USER = "proyectob"
-DB_PASS = "proyectob"
+# Configuración de la base de datos
+DB_USER = "proyecto"
+DB_PASS = "proyecto"
 DB_DSN = "localhost/XEPDB1"
 
-
-
-#Configuración de la conexión Idaly
-#DB_USER = "proyecto"
-#DB_PASS = "proyecto"
-#DB_DSN = "localhost/XEPDB1" 
 def get_connection():
     return oracledb.connect(user=DB_USER, password=DB_PASS, dsn=DB_DSN)
 
+# --- Funciones de usuario ---
 def user_exists(email):
     conn = get_connection()
     cur = conn.cursor()
@@ -37,17 +33,84 @@ def create_user(username, email, password):
         cur.close()
         conn.close()
 
-def login_window(root):
+# --- Ventana de categorías ---
+def create_category(category_name):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.callproc("add_category", [category_name])
+        conn.commit()
+        messagebox.showinfo("Éxito", "Categoría creada correctamente 🎉")
+    except Exception as e:
+        messagebox.showerror("Error", f"Error al crear categoría: {e}")
+    finally:
+        cur.close()
+        conn.close()
+
+def get_all_categories():
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT category_id, category_name FROM categories ORDER BY category_id")
+        return cur.fetchall()
+    finally:
+        cur.close()
+        conn.close()
+
+def categories_window(root):
+    win = Toplevel(root)
+    win.title("Gestión de Categorías")
+    win.geometry("600x500")
+    win.resizable(False, False)
+    win.configure(bg="#FFF5EE")
+
+    frame = Frame(win, bg="#FFF5EE")
+    frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+    Label(frame, text="Nueva Categoría", font=("Helvetica", 16, "bold"), bg="#FFF5EE").pack(pady=(0,10))
+
+    cat_var = StringVar()
+    entry = Entry(frame, textvariable=cat_var, font=("Arial", 12))
+    entry.pack(pady=5, fill="x")
+
+    def refresh_listbox():
+        listbox.delete(0, END)
+        categories = get_all_categories()
+        for cat in categories:
+            listbox.insert(END, f"{cat[0]} - {cat[1]}")
+
+    def save_category():
+        nombre = cat_var.get().strip()
+        if not nombre:
+            messagebox.showwarning("Aviso", "El nombre no puede estar vacío")
+            return
+        create_category(nombre)
+        cat_var.set("")
+        refresh_listbox()
+
+    Button(frame, text="Agregar Categoría", command=save_category,
+           bg="#E74C3C", fg="white", font=("Arial", 12, "bold")).pack(pady=10, fill="x")
+
+    Label(frame, text="Categorías existentes:", font=("Helvetica", 14, "bold"), bg="#FFF5EE").pack(pady=(20,5))
+
+    listbox_frame = Frame(frame, bg="#FFF5EE")
+    listbox_frame.pack(fill="both", expand=True)
+
+    scrollbar = Scrollbar(listbox_frame)
+    scrollbar.pack(side="right", fill="y")
+
+    listbox = Listbox(listbox_frame, font=("Arial", 12), yscrollcommand=scrollbar.set)
+    listbox.pack(fill="both", expand=True)
+    scrollbar.config(command=listbox.yview)
+
+    refresh_listbox()
+
+# --- Ventanas de login y registro ---
+def login_window(root, on_success):
     win = Toplevel(root)
     win.title("Login")
     win.geometry("350x250")
-    win.configure(bg="#1e1e2f")  # Fondo custom
-
-    # Centrar la ventana
-    win.update_idletasks()
-    x = (win.winfo_screenwidth() - win.winfo_width()) // 2
-    y = (win.winfo_screenheight() - win.winfo_height()) // 2
-    win.geometry(f"+{x}+{y}")
+    win.configure(bg="#1e1e2f")
 
     Label(win, text="Email:", bg="#1e1e2f", fg="white", font=("Arial", 12)).pack(pady=10)
     email_var = StringVar()
@@ -69,6 +132,7 @@ def login_window(root):
             if password_input == usuario[3]:
                 messagebox.showinfo("Bienvenido", f"Hola {usuario[1]}")
                 win.destroy()
+                on_success(usuario)
             else:
                 messagebox.showerror("Error", "Contraseña incorrecta")
         else:
@@ -76,17 +140,11 @@ def login_window(root):
 
     Button(win, text="Login", command=attempt_login, bg="#61afef", fg="white", font=("Arial", 12), relief="ridge", bd=3).pack(pady=15)
 
-def register_window(root):
+def register_window(root, on_success):
     win = Toplevel(root)
     win.title("Registro")
     win.geometry("350x350")
     win.configure(bg="#2f2f3f")
-
-    # Centrar ventana
-    win.update_idletasks()
-    x = (win.winfo_screenwidth() - win.winfo_width()) // 2
-    y = (win.winfo_screenheight() - win.winfo_height()) // 2
-    win.geometry(f"+{x}+{y}")
 
     Label(win, text="Nombre:", bg="#2f2f3f", fg="white", font=("Arial", 12)).pack(pady=10)
     nombre_var = StringVar()
@@ -120,32 +178,49 @@ def register_window(root):
             messagebox.showerror("Error", "Las contraseñas no coinciden")
             return
         create_user(nombre, correo, password)
+        messagebox.showinfo("Éxito", "Usuario registrado")
         win.destroy()
+        on_success(user_exists(correo))
 
     Button(win, text="Registrarse", command=attempt_register, bg="#98c379", fg="white", font=("Arial", 12), relief="ridge", bd=3).pack(pady=15)
 
+# --- Menú principal después de login/registro ---
+def app_menu(user):
+    root = tk.Tk()
+    root.title(f"Panel de {user[1]}")
+    root.geometry("400x400")
+    root.configure(bg="#282c34")
+
+    Button(root, text="Categorías", command=lambda: categories_window(root),
+           bg="#E74C3C", fg="white", font=("Arial", 14)).pack(pady=20, fill="x", padx=40)
+
+    # Aquí puedes agregar más botones para otras tablas: Users, Articles, Comments, Tags, Article_Tags, Article_Categories
+    # Ejemplo:
+    # Button(root, text="Gestionar Artículos", command=lambda: articles_window(root), ...)
+
+    Button(root, text="Salir", command=root.destroy, bg="#e06c75", fg="white", font=("Arial", 14)).pack(pady=20, fill="x", padx=40)
+
+    root.mainloop()
+
+# --- Ventana inicial ---
 def main_menu():
     root = tk.Tk()
     root.title("Gestión de Usuarios")
     root.geometry("400x300")
     root.configure(bg="#282c34")
 
-    # Configuración de grid para expandir botones
-    root.columnconfigure(0, weight=1)
-    for i in range(3):
-        root.rowconfigure(i, weight=1)
+    Button(root, text="Login", command=lambda: login_window(root, app_menu),
+           bg="#61afef", fg="white", font=("Arial", 14), relief="ridge", bd=3).pack(pady=20, fill="x", padx=40)
 
-    # Botones con estilo custom
-    btn_login = Button(root, text="Login", command=lambda: login_window(root), bg="#61afef", fg="white", font=("Arial", 14), relief="ridge", bd=3)
-    btn_login.grid(row=0, column=0, sticky="nsew", padx=20, pady=10)
+    Button(root, text="Registrarse", command=lambda: register_window(root, app_menu),
+           bg="#98c379", fg="white", font=("Arial", 14), relief="ridge", bd=3).pack(pady=20, fill="x", padx=40)
 
-    btn_register = Button(root, text="Registrarse", command=lambda: register_window(root), bg="#98c379", fg="white", font=("Arial", 14), relief="ridge", bd=3)
-    btn_register.grid(row=1, column=0, sticky="nsew", padx=20, pady=10)
-
-    btn_exit = Button(root, text="Salir", command=root.destroy, bg="#e06c75", fg="white", font=("Arial", 14), relief="ridge", bd=3)
-    btn_exit.grid(row=2, column=0, sticky="nsew", padx=20, pady=10)
+    Button(root, text="Salir", command=root.destroy, bg="#e06c75", fg="white", font=("Arial", 14), relief="ridge", bd=3).pack(pady=20, fill="x", padx=40)
 
     root.mainloop()
+
+if __name__ == "__main__":
+    main_menu()
 
 if __name__ == "__main__":
     main_menu()

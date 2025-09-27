@@ -1,23 +1,19 @@
 import oracledb
 import tkinter as tk
-from tkinter import messagebox, simpledialog, Toplevel, Label, Entry, Button, StringVar, Listbox, Scrollbar, Text, Frame
+from tkinter import messagebox, Toplevel, Label, Entry, Button, StringVar, Listbox, Text, Frame
 
-DB_USER = "proyectob"
-DB_PASS = "proyectob"
+# Configuración de la conexión
+DB_USER = "proyecto"
+DB_PASS = "proyecto"
 DB_DSN = "localhost/XEPDB1"
-
-#Configuración de la conexión Idaly
-#DB_USER = "proyecto"
-#DB_PASS = "proyecto"
-#DB_DSN = "localhost/XEPDB1" 
 
 def get_connection():
     return oracledb.connect(user=DB_USER, password=DB_PASS, dsn=DB_DSN)
 
+# --- Usuarios ---
 def user_exists(email):
     conn = get_connection()
     cur = conn.cursor()
-    # Devolvemos el user_id también, lo necesitaremos
     cur.execute("SELECT user_id, username, email, password FROM users WHERE email = :email", {"email": email})
     row = cur.fetchone()
     cur.close()
@@ -37,12 +33,11 @@ def create_user(username, email, password):
         cur.close()
         conn.close()
 
-## NUEVO ## - Función para crear un artículo en la base de datos
+# --- Artículos ---
 def create_article(title, text, user_id):
     conn = get_connection()
     cur = conn.cursor()
     try:
-        # Llama al procedimiento almacenado 'add_article'
         cur.callproc("add_article", [title, text, user_id])
         conn.commit()
         messagebox.showinfo("Éxito", "Artículo publicado correctamente")
@@ -52,17 +47,11 @@ def create_article(title, text, user_id):
         cur.close()
         conn.close()
 
-
-## NUEVO ## - Función para obtener los artículos de un usuario (CORREGIDA)
 def get_user_articles(user_id):
     conn = get_connection()
     cur = conn.cursor()
     try:
-        # --- ESTA ES LA PARTE CORREGIDA ---
-        # En lugar de crear una variable con cur.var(), pasamos el TIPO directamente a callfunc.
         result_cursor = cur.callfunc("get_articles_by_user", oracledb.DB_TYPE_CURSOR, [user_id])
-        
-        # Leemos los resultados del cursor
         articles = result_cursor.fetchall()
         return articles
     except Exception as e:
@@ -72,6 +61,29 @@ def get_user_articles(user_id):
         cur.close()
         conn.close()
 
+# --- Categorías ---
+def get_all_categories():
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT category_id, category_name FROM categories ORDER BY category_name")
+        return cur.fetchall()
+    finally:
+        cur.close()
+        conn.close()
+
+def associate_article_categories(article_id, category_ids):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        for cat_id in category_ids:
+            cur.callproc("add_article_category", [article_id, cat_id])
+        conn.commit()
+    finally:
+        cur.close()
+        conn.close()
+
+# --- Ventanas ---
 def login_window(root):
     win = Toplevel(root)
     win.title("Login")
@@ -94,18 +106,16 @@ def login_window(root):
     def attempt_login():
         correo = email_var.get()
         password_input = password_var.get()
-        if not correo or "@" not in correo: # Verificación más genérica
+        if not correo or "@" not in correo:
             messagebox.showerror("Error", "Correo no válido")
             return
 
         usuario = user_exists(correo)
         if usuario:
-            # usuario[0] = user_id, usuario[1] = username, usuario[3] = password
             if password_input == usuario[3]:
-                ## MODIFICADO ## - En lugar de un mensaje, abrimos la ventana del blog
-                win.destroy() # Cerramos la ventana de login
-                root.withdraw() # Ocultamos la ventana principal del menú
-                blog_window(root, usuario[0], usuario[1]) # Abrimos la ventana del blog
+                win.destroy()
+                root.withdraw()
+                blog_window(root, usuario[0], usuario[1])
             else:
                 messagebox.showerror("Error", "Contraseña incorrecta")
         else:
@@ -113,80 +123,85 @@ def login_window(root):
 
     Button(win, text="Login", command=attempt_login, bg="#61afef", fg="white", font=("Arial", 12), relief="ridge", bd=3).pack(pady=15)
 
-## NUEVO ## - Ventana principal del Blog para crear y ver artículos
 def blog_window(root, user_id, username):
     blog_win = Toplevel(root)
     blog_win.title(f"Blog de {username}")
-    blog_win.geometry("800x600")
+    blog_win.geometry("900x600")
     blog_win.configure(bg="#282c34")
 
-    # Frame principal
     main_frame = Frame(blog_win, bg="#282c34")
     main_frame.pack(fill="both", expand=True, padx=10, pady=10)
-    
-    # --- Columna izquierda: Crear nuevo artículo ---
+
+    # --- Crear artículo ---
     create_frame = Frame(main_frame, bg="#2f2f3f", padx=10, pady=10)
     create_frame.grid(row=0, column=0, sticky="nsew", padx=5)
-    main_frame.columnconfigure(0, weight=2) # La columna de creación es más ancha
+    main_frame.columnconfigure(0, weight=2)
     main_frame.rowconfigure(0, weight=1)
 
     Label(create_frame, text="Nuevo Artículo", font=("Arial", 16, "bold"), bg="#2f2f3f", fg="white").pack(pady=10)
-    
+
     Label(create_frame, text="Título:", font=("Arial", 12), bg="#2f2f3f", fg="white").pack(anchor="w", pady=(10,0))
     title_entry = Entry(create_frame, font=("Arial", 12), width=50)
     title_entry.pack(fill="x", pady=5)
-    
+
     Label(create_frame, text="Contenido:", font=("Arial", 12), bg="#2f2f3f", fg="white").pack(anchor="w", pady=(10,0))
-    content_text = Text(create_frame, font=("Arial", 11), height=20, wrap="word")
+    content_text = Text(create_frame, font=("Arial", 11), height=15, wrap="word")
     content_text.pack(fill="both", expand=True, pady=5)
 
-    # --- Columna derecha: Lista de artículos existentes ---
+    Label(create_frame, text="Categorías:", font=("Arial", 12), bg="#2f2f3f", fg="white").pack(anchor="w", pady=(10,0))
+    categories_listbox = Listbox(create_frame, selectmode="multiple", bg="#3c3c4c", fg="white", height=6)
+    categories_listbox.pack(fill="x", pady=5)
+
+    all_categories = get_all_categories()
+    for cat in all_categories:
+        categories_listbox.insert('end', f"{cat[1]}")  # cat[1] = nombre
+
+    # --- Lista de artículos ---
     list_frame = Frame(main_frame, bg="#2f2f3f", padx=10, pady=10)
     list_frame.grid(row=0, column=1, sticky="nsew", padx=5)
-    main_frame.columnconfigure(1, weight=1) # La columna de lista es más estrecha
+    main_frame.columnconfigure(1, weight=1)
 
     Label(list_frame, text="Mis Artículos", font=("Arial", 16, "bold"), bg="#2f2f3f", fg="white").pack(pady=10)
-    
     articles_listbox = Listbox(list_frame, font=("Arial", 11), bg="#3c3c4c", fg="white")
     articles_listbox.pack(fill="both", expand=True)
 
-    # --- Funciones internas de la ventana del blog ---
     def refresh_articles():
-        # Limpiar la lista actual
         articles_listbox.delete(0, 'end')
-        # Obtener los artículos de la BD
         articles = get_user_articles(user_id)
-        # Poblar la lista
         if articles:
             for article in articles:
-                # article[1] es el título según tu función get_articles_by_user
                 articles_listbox.insert('end', article[1])
 
     def publish_article():
         title = title_entry.get()
-        content = content_text.get("1.0", "end-1c") # Obtener todo el texto del widget
+        content = content_text.get("1.0", "end-1c")
         if not title or not content:
             messagebox.showerror("Error", "El título y el contenido no pueden estar vacíos.")
             return
-        
+
         create_article(title, content, user_id)
-        # Limpiar campos y refrescar la lista
+
+        # Obtener el article_id recién creado
+        articles = get_user_articles(user_id)
+        article_id = articles[-1][0]
+
+        # Asociar categorías
+        selected_indices = categories_listbox.curselection()
+        selected_ids = [all_categories[i][0] for i in selected_indices]
+        associate_article_categories(article_id, selected_ids)
+
         title_entry.delete(0, 'end')
         content_text.delete("1.0", 'end')
+        categories_listbox.selection_clear(0, 'end')
         refresh_articles()
 
-    # Botón para publicar
     Button(create_frame, text="Publicar Artículo", command=publish_article, bg="#98c379", fg="white", font=("Arial", 12)).pack(pady=15)
 
-    # Al cerrar esta ventana, volver a mostrar el menú principal
     def on_close():
         blog_win.destroy()
         root.deiconify()
     blog_win.protocol("WM_DELETE_WINDOW", on_close)
-
-    # Cargar los artículos por primera vez al abrir la ventana
     refresh_articles()
-
 
 def register_window(root):
     win = Toplevel(root)
