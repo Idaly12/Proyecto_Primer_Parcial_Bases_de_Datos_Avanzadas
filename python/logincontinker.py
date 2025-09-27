@@ -3,8 +3,8 @@ import tkinter as tk
 from tkinter import messagebox, Toplevel, Label, Entry, Button, StringVar, Frame, Listbox, Scrollbar, END
 
 # Configuración de la base de datos
-DB_USER = "proyecto"
-DB_PASS = "proyecto"
+DB_USER = "proyectob"
+DB_PASS = "proyectob"
 DB_DSN = "localhost/XEPDB1"
 
 def get_connection():
