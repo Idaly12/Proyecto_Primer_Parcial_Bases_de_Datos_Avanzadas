@@ -8,11 +8,6 @@ DB_USER = "proyectob"
 DB_PASS = "proyectob"
 DB_DSN = "localhost/XEPDB1" 
 
-# Configuración oracle/idaly
-#DB_USER = "proyectob"
-#DB_PASS = "proyectob"
-#DB_DSN = "localhost/XEPDB1"  
-
 # ID de usuario temporal (se reemplazará cuando se junte con el login)
 CURRENT_USER_ID = 1 
 
@@ -159,6 +154,9 @@ class BlogApp(ctk.CTk):
         self._create_header()
         self._create_main_content_area()
         
+        # NUEVO: Establece la vista inicial a la lista de artículos
+        self.show_frame(self.articles_frame)
+        
         self.load_articles()
 
     def _create_header(self):
@@ -180,6 +178,7 @@ class BlogApp(ctk.CTk):
 
         self._create_sidebar()
         self._create_articles_frame()
+        self._create_article_detail_frame() # NUEVO: Llama a la creación del frame de detalle
 
     def _create_sidebar(self):
         self.sidebar_frame = ctk.CTkFrame(self.content_container, width=250, corner_radius=0, fg_color="white")
@@ -193,7 +192,8 @@ class BlogApp(ctk.CTk):
 
     def _create_articles_frame(self):
         self.articles_frame = ctk.CTkFrame(self.content_container, corner_radius=0, fg_color="white")
-        self.articles_frame.grid(row=0, column=1, sticky="nsew", padx=30, pady=30)
+        # MODIFICADO: La posición se gestionará con show_frame(), no aquí.
+        # self.articles_frame.grid(row=0, column=1, sticky="nsew", padx=30, pady=30)
         self.articles_frame.grid_columnconfigure(0, weight=1)
         self.articles_frame.grid_rowconfigure(1, weight=1)
 
@@ -213,6 +213,55 @@ class BlogApp(ctk.CTk):
         self.scrollable_frame = ctk.CTkScrollableFrame(self.articles_frame, label_text="Últimas Recetas", label_font=ctk.CTkFont(size=14), fg_color="white")
         self.scrollable_frame.grid(row=1, column=0, sticky="nsew")
         self.scrollable_frame.grid_columnconfigure(0, weight=1)
+    
+    # --- NUEVAS VISTAS Y LÓGICA DE NAVEGACIÓN ---
+
+    def _create_article_detail_frame(self):
+        """Crea el frame que mostrará el contenido completo de un artículo."""
+        self.article_detail_frame = ctk.CTkFrame(self.content_container, corner_radius=0, fg_color="white")
+        self.article_detail_frame.grid_columnconfigure(0, weight=1)
+        self.article_detail_frame.grid_rowconfigure(1, weight=1)
+        
+        # Botón para regresar a la lista de artículos
+        back_button = ctk.CTkButton(self.article_detail_frame, text="< Volver a Recetas",
+                                    command=lambda: self.show_frame(self.articles_frame),
+                                    fg_color="transparent", text_color="gray30", hover_color="gray90")
+        back_button.grid(row=0, column=0, sticky="w", padx=0, pady=(0, 20))
+        
+        # Frame scrollable para el contenido del artículo
+        self.detail_content_frame = ctk.CTkScrollableFrame(self.article_detail_frame, fg_color="transparent")
+        self.detail_content_frame.grid(row=1, column=0, sticky="nsew")
+        self.detail_content_frame.grid_columnconfigure(0, weight=1)
+
+    def show_frame(self, frame_to_show):
+        """Muestra el frame solicitado y oculta los demás."""
+        self.articles_frame.grid_forget()
+        self.article_detail_frame.grid_forget()
+        frame_to_show.grid(row=0, column=1, sticky="nsew", padx=30, pady=30)
+    
+    def show_article_detail(self, article):
+        """Puebla el frame de detalle con la información del artículo y lo muestra."""
+        # Limpiar contenido anterior
+        for widget in self.detail_content_frame.winfo_children():
+            widget.destroy()
+
+        # Añadir nuevo contenido
+        title_label = ctk.CTkLabel(self.detail_content_frame, text=article['title'], font=ctk.CTkFont(size=32, weight="bold"), wraplength=800, justify="left")
+        title_label.grid(row=0, column=0, sticky="w", pady=(10, 15))
+
+        meta_text = f"Publicado el {article['date']} por {article['author']}"
+        meta_label = ctk.CTkLabel(self.detail_content_frame, text=meta_text, font=ctk.CTkFont(size=14), text_color="gray50", justify="left")
+        meta_label.grid(row=1, column=0, sticky="w", pady=(0, 20))
+
+        separator = ctk.CTkFrame(self.detail_content_frame, height=2, fg_color="gray90")
+        separator.grid(row=2, column=0, sticky="ew", pady=(0, 20))
+
+        content_label = ctk.CTkLabel(self.detail_content_frame, text=article['content'], font=ctk.CTkFont(size=16), wraplength=800, justify="left", anchor="nw")
+        content_label.grid(row=3, column=0, sticky="w")
+        
+        self.show_frame(self.article_detail_frame)
+    
+    # --- FIN DE NUEVAS VISTAS Y LÓGICA ---
 
     def load_sidebar_categories(self):
         """Carga las categorías y las muestra, o muestra un mensaje si no hay."""
@@ -243,11 +292,13 @@ class BlogApp(ctk.CTk):
         """Filtra los artículos por la categoría seleccionada."""
         articles_from_db = get_articles_by_category(category_id)
         self.display_articles(articles_from_db)
+        self.show_frame(self.articles_frame) # MODIFICADO: Asegura mostrar la lista
 
     def load_articles(self):
         """Carga todos los artículos sin filtro."""
         articles_from_db = get_all_articles()
         self.display_articles(articles_from_db)
+        self.show_frame(self.articles_frame) # MODIFICADO: Asegura mostrar la lista
 
     def display_articles(self, articles_list):
         """Limpia el frame y muestra la lista de artículos proporcionada."""
@@ -262,9 +313,11 @@ class BlogApp(ctk.CTk):
             return
 
         for i, article_tuple in enumerate(articles_list):
+            # MODIFICADO: El diccionario ahora también guarda el contenido completo
             article_data = {
                 "id": article_tuple[0],
                 "title": article_tuple[1],
+                "content": article_tuple[2], # Guardamos el contenido completo
                 "extract": (article_tuple[2][:100] + '...') if len(article_tuple[2]) > 100 else article_tuple[2],
                 "date": article_tuple[3].strftime("%b %d, %Y") if isinstance(article_tuple[3], datetime) else "N/A",
                 "author": article_tuple[4],
@@ -284,8 +337,17 @@ class BlogApp(ctk.CTk):
         
         date_label = ctk.CTkLabel(card, text=article['date'], font=ctk.CTkFont(size=14, weight="bold"), text_color="gray50", anchor="w")
         date_label.grid(row=0, column=0, sticky="w")
+        
         title_label = ctk.CTkLabel(card, text=article['title'], font=ctk.CTkFont(size=24, weight="bold"), anchor="w", justify="left")
         title_label.grid(row=1, column=0, pady=(0, 10), sticky="w")
+        
+        # --- NUEVO: Hacer el título clicable ---
+        title_label.bind("<Button-1>", lambda event, art=article: self.show_article_detail(art))
+        # Cambia el cursor a una mano para indicar que es un enlace
+        title_label.bind("<Enter>", lambda event: title_label.configure(cursor="hand2", text_color="#D32F2F"))
+        title_label.bind("<Leave>", lambda event: title_label.configure(cursor="", text_color="black")) # O el color original
+        # --- FIN ---
+        
         extract_label = ctk.CTkLabel(card, text=article['extract'], wraplength=800, text_color="gray40", anchor="w", justify="left")
         extract_label.grid(row=2, column=0, pady=(0, 10), sticky="w")
         tags_text = f"{' '.join(article['tags'])} | por {article['author']} | {article['time']}"
