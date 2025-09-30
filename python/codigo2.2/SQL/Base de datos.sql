@@ -1,3 +1,14 @@
+--------------------------------------------------------------------------------
+-- ELIMINAR TABLAS (DROP)
+--------------------------------------------------------------------------------
+DROP TABLE article_categories CASCADE CONSTRAINTS;
+DROP TABLE article_tags CASCADE CONSTRAINTS;
+DROP TABLE comments CASCADE CONSTRAINTS;
+DROP TABLE articles CASCADE CONSTRAINTS;
+DROP TABLE categories CASCADE CONSTRAINTS;
+DROP TABLE tags CASCADE CONSTRAINTS;
+DROP TABLE users CASCADE CONSTRAINTS;
+
 -------------------------------------------------------------------------------
 -- 1. CREACIÓN DE TABLAS
 --------------------------------------------------------------------------------
@@ -65,15 +76,6 @@ CREATE TABLE article_categories (
     CONSTRAINT fk_article_categories_article FOREIGN KEY(article_id) REFERENCES articles(article_id),
     CONSTRAINT fk_article_categories_category FOREIGN KEY(category_id) REFERENCES categories(category_id)
 );
-
-
---------------------------------------------------------------------------------
--- 2. MODIFICACIÓN DE TABLAS
---------------------------------------------------------------------------------
-
--- Añadir nuevas columnas a la tabla de comentarios
-ALTER TABLE comments ADD (text CLOB);
-ALTER TABLE comments ADD (created_at DATE DEFAULT SYSDATE);
 
 
 --------------------------------------------------------------------------------
