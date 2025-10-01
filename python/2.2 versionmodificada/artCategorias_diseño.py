@@ -1,4 +1,4 @@
-# blog_view.py
+# blog_view.py (AJUSTADO: Espaciado de Categorías)
 import customtkinter as ctk
 from tkinter import messagebox
 import ConexionBDD as db
@@ -18,8 +18,6 @@ class BlogApp(ctk.CTkToplevel):
         self.selected_category_id = None 
         self.tag_checkboxes = {}
         
-        # >>>>> MODIFICADO <<<<<
-        # Variable para mantener el estado del filtro de categoría actual
         self.current_category_id = None
 
         self.grid_rowconfigure(1, weight=1)
@@ -64,25 +62,21 @@ class BlogApp(ctk.CTkToplevel):
         self.sidebar_frame.grid(row=0, column=0, sticky="ns", padx=(30, 0), pady=30)
         self.sidebar_frame.grid_columnconfigure(0, weight=1)
         
+        # >>> INICIO DEL CAMBIO: Espaciado ajustado <<<
         category_title = ctk.CTkLabel(self.sidebar_frame, text="Categorías", font=ctk.CTkFont(size=16, weight="bold"), anchor="w")
-        category_title.pack(padx=0, pady=(0, 5), anchor="w")
+        # Se elimina el espacio vertical después del título
+        category_title.pack(padx=0, pady=(0, 0), anchor="w") 
         
         self.categories_sidebar_frame = ctk.CTkFrame(self.sidebar_frame, fg_color="transparent")
-        self.categories_sidebar_frame.pack(fill="x", expand=True, anchor="w")
-        self.load_sidebar_categories()
+        # Se asegura que el frame de los botones se pegue al título
+        self.categories_sidebar_frame.pack(fill="x", anchor="w", pady=(5, 0)) 
+        # >>> FIN DEL CAMBIO <<<
         
-        tag_title = ctk.CTkLabel(self.sidebar_frame, text="Etiquetas", font=ctk.CTkFont(size=16, weight="bold"), anchor="w")
-        tag_title.pack(padx=0, pady=(20, 5), anchor="w")
+        self.load_sidebar_categories()
 
-        self.tags_sidebar_frame = ctk.CTkFrame(self.sidebar_frame, fg_color="transparent")
-        self.tags_sidebar_frame.pack(fill="x", expand=True, anchor="w")
-        self.load_sidebar_tags()
-
-    # >>>>> MÉTODO MODIFICADO <<<<<
     def _create_articles_frame(self):
         self.articles_frame = ctk.CTkFrame(self.content_container, corner_radius=0, fg_color="white")
         self.articles_frame.grid_columnconfigure(0, weight=1)
-        # Se cambia el peso de la fila para dar espacio a la nueva barra de etiquetas
         self.articles_frame.grid_rowconfigure(2, weight=1)
         
         header_frame = ctk.CTkFrame(self.articles_frame, fg_color="transparent")
@@ -94,14 +88,10 @@ class BlogApp(ctk.CTkToplevel):
         subtitle_insights = ctk.CTkLabel(header_frame, text="Recetas y consejos de nuestros mejores usuarios.", font=ctk.CTkFont(size=18), text_color="gray50", anchor="w")
         subtitle_insights.grid(row=1, column=0, sticky="w", pady=(0, 15))
         
-        # >>>>> INICIO: CÓDIGO AÑADIDO <<<<<
-        # Frame para los botones de filtro por etiqueta, que aparece sobre los artículos
         self.tags_filter_frame = ctk.CTkFrame(self.articles_frame, fg_color="transparent")
         self.tags_filter_frame.grid(row=1, column=0, sticky="ew", pady=(0, 15))
-        # >>>>> FIN: CÓDIGO AÑADIDO <<<<<
 
         self.scrollable_frame = ctk.CTkScrollableFrame(self.articles_frame, label_text="Últimas Recetas", label_font=ctk.CTkFont(size=14), fg_color="white")
-        # La fila del scrollable frame se ajusta a 2 para dejar espacio al nuevo frame de etiquetas
         self.scrollable_frame.grid(row=2, column=0, sticky="nsew")
         self.scrollable_frame.grid_columnconfigure(0, weight=1)
 
@@ -110,24 +100,28 @@ class BlogApp(ctk.CTkToplevel):
 
     def _create_upload_frame(self):
         self.upload_frame = ctk.CTkFrame(self.content_container, fg_color="transparent")
-       
         self.upload_frame.grid_columnconfigure(0, weight=1)
         self.upload_frame.grid_rowconfigure(4, weight=1)
+        
         ctk.CTkLabel(self.upload_frame, text="Publicar una Nueva Receta ✍️", font=ctk.CTkFont(size=28, weight="bold")).grid(row=0, column=0, padx=20, pady=(20, 15), sticky="w")
         ctk.CTkLabel(self.upload_frame, text="Nombre de la Receta:", font=ctk.CTkFont(size=16, weight="bold")).grid(row=1, column=0, padx=20, pady=(10, 5), sticky="w")
         self.upload_title_entry = ctk.CTkEntry(self.upload_frame, height=40, placeholder_text="Ej. Pizza casera con masa madre")
         self.upload_title_entry.grid(row=2, column=0, padx=20, pady=(0, 15), sticky="ew")
+        
         ctk.CTkLabel(self.upload_frame, text="Instrucciones (Ingredientes y Pasos):", font=ctk.CTkFont(size=16, weight="bold")).grid(row=3, column=0, padx=20, pady=(10, 5), sticky="w")
         self.upload_content_textbox = ctk.CTkTextbox(self.upload_frame, wrap="word", corner_radius=10, border_width=1, border_color="gray70", fg_color="gray95")
         self.upload_content_textbox.grid(row=4, column=0, padx=20, pady=(0, 15), sticky="nsew")
+        
         ctk.CTkLabel(self.upload_frame, text="Categoría (Elige una):", font=ctk.CTkFont(size=16, weight="bold")).grid(row=5, column=0, padx=20, pady=(10, 5), sticky="w")
         self.categories_button_frame = ctk.CTkFrame(self.upload_frame, fg_color="transparent")
         self.categories_button_frame.grid(row=6, column=0, padx=20, pady=(0, 20), sticky="w")
         self.load_category_buttons()
+        
         ctk.CTkLabel(self.upload_frame, text="Etiquetas (Elige las que apliquen):", font=ctk.CTkFont(size=16, weight="bold")).grid(row=7, column=0, padx=20, pady=(10, 5), sticky="w")
         self.tags_checkbox_frame = ctk.CTkFrame(self.upload_frame, fg_color="transparent")
         self.tags_checkbox_frame.grid(row=8, column=0, padx=20, pady=(0, 20), sticky="w")
         self.load_tag_checkboxes()
+        
         buttons_frame = ctk.CTkFrame(self.upload_frame, fg_color="transparent")
         buttons_frame.grid(row=9, column=0, padx=20, pady=20, sticky="e")
         self.cancel_button = ctk.CTkButton(buttons_frame, text="Cancelar", command=self.load_articles, fg_color="gray50", hover_color="gray30")
@@ -149,8 +143,8 @@ class BlogApp(ctk.CTkToplevel):
                 corner_radius=20, width=0
             )
             btn.pack(side="left", padx=(5, 5), pady=5)
-            if self.selected_category_id is None:
-                self.select_upload_category(cat_id)
+        if self.selected_category_id is None and self.categories_data:
+            self.select_upload_category(self.categories_data[0][0])
         self.update_category_button_styles()
 
     def load_tag_checkboxes(self):
@@ -163,10 +157,7 @@ class BlogApp(ctk.CTkToplevel):
             return
         for i, (tag_id, tag_name) in enumerate(tags_data):
             var = ctk.StringVar(value="off")
-            cb = ctk.CTkCheckBox(
-                self.tags_checkbox_frame, text=tag_name, variable=var,
-                onvalue=str(tag_id), offvalue="off"
-            )
+            cb = ctk.CTkCheckBox(self.tags_checkbox_frame, text=tag_name, variable=var, onvalue=str(tag_id), offvalue="off")
             cb.pack(side="left", padx=5, pady=5)
             self.tag_checkboxes[tag_id] = var
 
@@ -198,16 +189,21 @@ class BlogApp(ctk.CTkToplevel):
         container = ctk.CTkFrame(self.article_detail_frame, fg_color="transparent")
         container.pack(fill="x", expand=True, padx=20, pady=10)
         container.grid_columnconfigure(0, weight=1)
+        
         back_button = ctk.CTkButton(container, text="← Volver a las Recetas", command=self.load_articles, fg_color="#D32F2F", hover_color="#B71C1C", corner_radius=8)
         back_button.grid(row=0, column=0, pady=(0, 25), sticky="w")
+        
         title_label = ctk.CTkLabel(container, text=article['title'], font=ctk.CTkFont(size=38, weight="bold"), wraplength=800, justify="left")
         title_label.grid(row=1, column=0, pady=(5, 10), sticky="w")
+        
         author_frame = ctk.CTkFrame(container, fg_color="transparent")
         author_frame.grid(row=2, column=0, pady=(0, 5), sticky="w")
-        author_button = ctk.CTkButton(author_frame, text=f"Publicado por: {article.get('username', 'N/A')}", command=lambda uid=article.get('user_id'): self.open_profile_window(uid) if uid else None, fg_color="transparent", text_color="#1E90FF", hover_color="#E0E0E0", font=ctk.CTkFont(size=14, weight="bold"), anchor="w")
-        author_button.pack(side="left")
+        author_button = ctk.CTkButton(author_frame, text=f"Publicado por: {article.get('username', 'N/A')}", command=lambda uid=article.get('user_id'): self.open_profile_window(uid) if uid else None, fg_color="transparent", text_color="#1E90FF", hover_color="#E0E0E0", font=ctk.CTkFont(size=14, weight="bold"), anchor="w", width=0)
+        author_button.grid(row=0, column=0, sticky="w")
+        
         date_label = ctk.CTkLabel(author_frame, text=f" el {article.get('created_at', 'N/A')}", font=ctk.CTkFont(size=14), text_color="gray50")
         date_label.pack(side="left")
+        
         tags_frame = ctk.CTkFrame(container, fg_color="transparent")
         tags_frame.grid(row=3, column=0, sticky="w", pady=(5, 10))
         article_tags = db.get_tags_for_article(article['id'])
@@ -216,34 +212,10 @@ class BlogApp(ctk.CTkToplevel):
             for tag_name in article_tags:
                 tag_label = ctk.CTkLabel(tags_frame, text=tag_name, fg_color="gray80", text_color="black", corner_radius=10, font=ctk.CTkFont(size=12))
                 tag_label.pack(side="left", padx=(0, 5), ipady=2, ipadx=5)
+        
         content_label = ctk.CTkLabel(container, text=article['text'], font=ctk.CTkFont(size=16), wraplength=800, justify="left", anchor="nw")
         content_label.grid(row=4, column=0, pady=(15, 30), sticky="ew")
-        separator = ctk.CTkFrame(container, height=2, fg_color="gray80")
-        separator.grid(row=5, column=0, pady=(10, 20), sticky="ew")
-        ctk.CTkLabel(container, text="Deja tu comentario:", font=ctk.CTkFont(size=18, weight="bold")).grid(row=6, column=0, pady=(0, 5), sticky="w")
-        new_comment_entry = ctk.CTkTextbox(container, height=80, wrap="word", corner_radius=10, border_width=1, border_color="gray70")
-        new_comment_entry.grid(row=7, column=0, pady=5, sticky="ew")
-        def post_new_comment():
-            comment_text = new_comment_entry.get("1.0", "end-1c").strip()
-            if not comment_text:
-                messagebox.showwarning("Atención", "El comentario no puede estar vacío.", parent=self)
-                return
-            db.add_comment(article['id'], self.user_id, comment_text)
-            new_comment_entry.delete("1.0", "end")
-            self.show_article_detail(article)
-        post_comment_button = ctk.CTkButton(container, text="Publicar Comentario", command=post_new_comment, fg_color="#1E90FF", hover_color="#176EBD")
-        post_comment_button.grid(row=8, column=0, pady=10, sticky="e")
-        ctk.CTkLabel(container, text="Comentarios 💬", font=ctk.CTkFont(size=20, weight="bold")).grid(row=9, column=0, pady=(30, 10), sticky="w")
-        comments_frame = ctk.CTkFrame(container, fg_color="transparent")
-        comments_frame.grid(row=10, column=0, pady=5, sticky="nsew")
-        comments = db.get_comments(article['id'])
-        if not comments:
-            ctk.CTkLabel(comments_frame, text="Aún no hay comentarios. ¡Sé el primero!", text_color="gray").pack(pady=10)
-        else:
-            for comment in comments:
-                comment_card = ctk.CTkFrame(comments_frame, fg_color="gray95", corner_radius=10)
-                comment_card.pack(fill="x", pady=5)
-            
+        
         self.show_frame(self.article_detail_frame)
 
     def show_upload_frame(self):
@@ -263,17 +235,18 @@ class BlogApp(ctk.CTkToplevel):
         if self.selected_category_id is None:
             messagebox.showerror("Error", "Debes seleccionar una categoría.", parent=self)
             return
+        
         db.create_article(title, content, self.user_id)
         new_article_id = db.get_latest_article_id_by_user(self.user_id)
         if new_article_id:
             db.associate_article_categories(new_article_id, [self.selected_category_id])
-            selected_tag_ids = [tag_id for tag_id, var in self.tag_checkboxes.items() if var.get() != "off"]
+            selected_tag_ids = [int(var.get()) for var in self.tag_checkboxes.values() if var.get() != "off"]
             if selected_tag_ids:
                 db.associate_article_tags(new_article_id, selected_tag_ids)
+        
         messagebox.showinfo("Éxito", "¡Receta publicada con éxito!", parent=self)
         self.load_articles()
         self.load_sidebar_categories()
-        self.load_sidebar_tags() 
 
     def open_profile_window(self, user_id_to_view):
         if self.profile_window is None or not self.profile_window.winfo_exists():
@@ -298,51 +271,17 @@ class BlogApp(ctk.CTkToplevel):
             btn = ctk.CTkButton(self.categories_sidebar_frame, text=cat_name, fg_color="transparent", text_color="gray30", hover_color="gray90", font=ctk.CTkFont(size=14), anchor="w", command=lambda cid=cat_id: self.filter_by_category(cid))
             btn.pack(fill="x", padx=0, pady=5)
 
-    def load_sidebar_tags(self):
-        for widget in self.tags_sidebar_frame.winfo_children():
-            widget.destroy()
-        
-        tags = db.get_all_tags()
-        if not tags:
-            ctk.CTkLabel(self.tags_sidebar_frame, text="No hay etiquetas.", text_color="gray50").pack(anchor="w")
-            return
-            
-        for tag_id, tag_name in tags:
-            btn = ctk.CTkButton(self.tags_sidebar_frame, text=f"# {tag_name}", fg_color="transparent", text_color="gray30", hover_color="gray90", font=ctk.CTkFont(size=14), anchor="w", command=lambda tid=tag_id: self.filter_by_tag(tid))
-            btn.pack(fill="x", padx=0, pady=5)
-    
-    # >>>>> MÉTODO MODIFICADO <<<<<
     def filter_by_category(self, category_id):
-        # Guarda el ID de la categoría actual para usarlo en el filtro de etiquetas
         self.current_category_id = category_id
-        
         articles = db.get_articles_by_category(category_id)
         self.display_articles(articles)
-        
-        # Actualiza y muestra los botones de filtro de etiquetas para esta categoría
         self._update_tag_filters(category_id)
-        
         self.show_frame(self.articles_frame)
 
-    # >>>>> MÉTODO MODIFICADO <<<<<
-    def filter_by_tag(self, tag_id):
-        # Esta función ahora solo filtra por etiqueta, sin combinar con categoría
-        self.current_category_id = None # Resetea el filtro de categoría
-        for widget in self.tags_filter_frame.winfo_children():
-            widget.destroy() # Limpia los filtros de categoría-etiqueta
-
-        articles = db.get_articles_by_tag(tag_id)
-        self.display_articles(articles)
-        self.show_frame(self.articles_frame)
-
-    # >>>>> MÉTODO MODIFICADO <<<<<
     def load_articles(self):
-        # Resetea el estado de la categoría actual
         self.current_category_id = None
-        # Limpia cualquier botón de filtro de etiquetas que estuviera visible
         for widget in self.tags_filter_frame.winfo_children():
             widget.destroy()
-            
         articles = db.get_all_articles()
         self.display_articles(articles)
         self.show_frame(self.articles_frame)
@@ -364,58 +303,47 @@ class BlogApp(ctk.CTkToplevel):
         separator.pack(fill="x", pady=(20, 10), padx=10)
         card.pack(fill="x", pady=(10, 0), padx=10)
         card.grid_columnconfigure(0, weight=1)
+        
         date_label = ctk.CTkLabel(card, text=article['created_at'], font=ctk.CTkFont(size=14, weight="bold"), text_color="#720F0F")
         date_label.grid(row=0, column=0, sticky="w", padx=15, pady=(10, 0))
+        
         title_label = ctk.CTkLabel(card, text=article['title'], font=ctk.CTkFont(size=24, weight="bold"), anchor="w", justify="left")
         title_label.grid(row=1, column=0, pady=(0, 10), sticky="w", padx=15)
+        
         extract = (article['text'][:200] + '...') if len(article['text']) > 200 else article['text']
         extract_label = ctk.CTkLabel(card, text=extract, wraplength=800, text_color="gray40", anchor="w", justify="left")
         extract_label.grid(row=2, column=0, pady=(0, 10), sticky="w", padx=15)
+        
         footer_frame = ctk.CTkFrame(card, fg_color="transparent")
         footer_frame.grid(row=3, column=0, sticky="ew", padx=15, pady=(0, 15))
         footer_frame.grid_columnconfigure(0, weight=1)
+        
         author_button = ctk.CTkButton(footer_frame, text=f"por {article['username']}", command=lambda uid=article['user_id']: self.open_profile_window(uid), fg_color="transparent", text_color="#1E90FF", hover_color="#E0E0E0", font=ctk.CTkFont(size=12, weight="bold"), anchor="w", width=0)
         author_button.grid(row=0, column=0, sticky="w")
+        
         view_button = ctk.CTkButton(footer_frame, text="Ver Receta →", command=lambda art=article: self.show_article_detail(art), fg_color="#D32F2F", hover_color="#B71C1C", corner_radius=8)
         view_button.grid(row=0, column=1, sticky="e")
 
-    # >>>>> INICIO: CÓDIGO AÑADIDO <<<<<
     def _update_tag_filters(self, category_id):
-        """Crea y muestra los botones de filtro por etiqueta para una categoría dada."""
-        # Limpia los botones de filtros anteriores
         for widget in self.tags_filter_frame.winfo_children():
             widget.destroy()
-
-        # Obtiene las etiquetas relevantes para esta categoría
         tags = db.get_tags_for_category(category_id)
-        
         if tags:
-            # Añade una etiqueta de título
             title = ctk.CTkLabel(self.tags_filter_frame, text="Filtrar por etiqueta:", font=ctk.CTkFont(size=14, weight="bold"))
             title.pack(side="left", padx=(0, 10))
-
-            # Botón para mostrar todos los de la categoría (elimina el filtro de etiqueta)
             all_btn = ctk.CTkButton(
-                self.tags_filter_frame, text="Todas",
-                command=lambda: self.filter_by_category(category_id),
-                font=ctk.CTkFont(size=14), fg_color="gray70", hover_color="gray50",
-                corner_radius=20, width=0
+                self.tags_filter_frame, text="Todas", command=lambda: self.filter_by_category(category_id),
+                font=ctk.CTkFont(size=14), fg_color="gray70", hover_color="gray50", corner_radius=20, width=0
             )
             all_btn.pack(side="left", padx=5, pady=5)
-
-            # Crea un botón por cada etiqueta encontrada
             for tag_id, tag_name in tags:
                 btn = ctk.CTkButton(
-                    self.tags_filter_frame, text=tag_name,
-                    command=lambda cid=category_id, tid=tag_id: self.filter_by_category_and_tag(cid, tid),
-                    font=ctk.CTkFont(size=14), fg_color="gray80", text_color="black", hover_color="gray60",
-                    corner_radius=20, width=0
+                    self.tags_filter_frame, text=tag_name, command=lambda cid=category_id, tid=tag_id: self.filter_by_category_and_tag(cid, tid),
+                    font=ctk.CTkFont(size=14), fg_color="gray80", text_color="black", hover_color="gray60", corner_radius=20, width=0
                 )
                 btn.pack(side="left", padx=5, pady=5)
 
     def filter_by_category_and_tag(self, category_id, tag_id):
-        """Filtra los artículos que pertenecen a una categoría Y tienen una etiqueta específica."""
         articles = db.get_articles_by_category_and_tag(category_id, tag_id)
         self.display_articles(articles)
         self.show_frame(self.articles_frame)
-    # >>>>> FIN: CÓDIGO AÑADIDO <<<<<
