@@ -11,7 +11,7 @@ class AdminWindow(ctk.CTkToplevel):
         self.user_id = user_id
         self.username = db.get_user_info(user_id)
         
-        self.title("Panel de Administración 👑")
+        self.title("Panel de Administración")
         self.geometry("900x700")
         self.resizable(False, False)
         

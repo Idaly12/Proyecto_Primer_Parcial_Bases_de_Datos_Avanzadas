@@ -24,12 +24,12 @@ class ProfileWindow(ctk.CTkToplevel):
 
         # 1. Botón de regreso: Cierra esta ventana y muestra la principal (main_app)
         back_button = ctk.CTkButton(self, text="← Volver al Blog", command=self.close_profile, 
-                                    fg_color="#D32F2F", hover_color="#B71C1C", corner_radius=8)
+                                     fg_color="#D32F2F", hover_color="#B71C1C", corner_radius=8)
         back_button.grid(row=0, column=0, padx=20, pady=10, sticky="w")
 
         self.username = get_user_info(self.user_id)
         username_label = ctk.CTkLabel(self, text=f"Recetas de {self.username}", 
-                                      font=ctk.CTkFont(size=32, weight="bold"))
+                                     font=ctk.CTkFont(size=32, weight="bold"))
         username_label.grid(row=1, column=0, padx=20, pady=10, sticky="w")
 
         # 2. Marco Scrollable para los artículos
@@ -54,7 +54,7 @@ class ProfileWindow(ctk.CTkToplevel):
         
         if not articles:
             no_articles_label = ctk.CTkLabel(self.articles_frame, text="Este usuario aún no ha publicado nada.", 
-                                              font=ctk.CTkFont(size=18))
+                                             font=ctk.CTkFont(size=18))
             no_articles_label.pack(pady=50)
             return
 
