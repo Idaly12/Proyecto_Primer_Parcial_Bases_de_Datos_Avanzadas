@@ -50,7 +50,7 @@ Antes de ejecutar el proyecto, tener instalado lo siguiente:
 
 1.  **Clonar el Repositorio**.
     ```bash
-    git clone <URL_DEL_REPOSITORIO>
+    git clone <https://github.com/Idaly12/Proyecto_Primer_Parcial_Bases_de_Datos_Avanzadas>
     cd <NOMBRE_CARPETA_PROYECTO>
     ```
 
