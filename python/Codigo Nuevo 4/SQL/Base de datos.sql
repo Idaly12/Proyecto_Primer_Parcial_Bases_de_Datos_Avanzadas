@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------------
--- 1. ELIMINAR OBJETOS EXISTENTES
+-- 1. ELIMINAR TABLAS
 --------------------------------------------------------------------------------
 
 DROP TABLE article_categories CASCADE CONSTRAINTS;
@@ -9,36 +9,6 @@ DROP TABLE articles CASCADE CONSTRAINTS;
 DROP TABLE categories CASCADE CONSTRAINTS;
 DROP TABLE tags CASCADE CONSTRAINTS;
 DROP TABLE users CASCADE CONSTRAINTS;
-
-DROP PACKAGE types;
-DROP PROCEDURE add_user;
-DROP PROCEDURE add_article;
-DROP PROCEDURE add_comment;
-DROP PROCEDURE add_tag;
-DROP PROCEDURE add_category;
-DROP PROCEDURE add_article_category;
-DROP PROCEDURE add_article_tag;
-DROP PROCEDURE update_user_password;
-DROP PROCEDURE promote_user;
-DROP PROCEDURE demote_user;
-
--- Procedimientos CRUD adicionales
-DROP PROCEDURE update_article;
-DROP PROCEDURE delete_article;
-DROP PROCEDURE update_category;
-DROP PROCEDURE delete_category;
-DROP PROCEDURE update_tag;
-DROP PROCEDURE delete_tag;
-DROP PROCEDURE delete_comment;
-DROP PROCEDURE delete_user;
-
--- Funciones de lectura
-DROP FUNCTION get_all_categories;
-DROP FUNCTION get_all_users;
-DROP FUNCTION get_all_tags;
-DROP FUNCTION get_all_articles_for_admin;
-DROP FUNCTION get_all_comments_for_admin;
-DROP FUNCTION get_article_details;
 
 --------------------------------------------------------------------------------
 -- 2. CREACIÓN DE TABLAS
@@ -122,7 +92,7 @@ AS
 END types;
 /
 --------------------------------------------------------------------------------
--- 4. PROCEDIMIENTOS DE CREACIÓN (CRUD: Create) - CORREGIDO
+-- 4. PROCEDIMIENTOS DE CREACIÓN
 --------------------------------------------------------------------------------
 
 -- Agregar un nuevo usuario (Contiene la CLAVE SECRETA para admin)
@@ -151,7 +121,7 @@ END;
 
 
 --------------------------------------------------------------------------------
--- 5. PROCEDIMIENTOS DE CREACIÓN (CRUD: Create)
+-- 5. PROCEDIMIENTOS DE CREACIÓN
 --------------------------------------------------------------------------------
 
 -- Agregar un nuevo usuario
@@ -266,7 +236,7 @@ END;
 /
 
 --------------------------------------------------------------------------------
--- 5. FUNCIONES DE LECTURA (CRUD: Read/List)
+-- 5. FUNCIONES DE LECTURA
 --------------------------------------------------------------------------------
 
 -- Función para obtener todas las categorías
@@ -320,7 +290,7 @@ EXCEPTION
 END;
 /
 
--- Función para obtener todos los artículos (listado administrativo)
+-- Función para obtener todos los artículos 
 CREATE OR REPLACE FUNCTION get_all_articles_for_admin
     RETURN types.ref_cursor
 AS
@@ -382,10 +352,10 @@ END;
 
 
 --------------------------------------------------------------------------------
--- 6. PROCEDIMIENTOS DE ACTUALIZACIÓN Y ELIMINACIÓN (CRUD: Update, Delete)
+-- 6. PROCEDIMIENTOS DE ACTUALIZACIÓN Y ELIMINACIÓN (Update, Delete)
 --------------------------------------------------------------------------------
 
--- [ADMIN: Users] Procedimiento para actualizar la contraseña de un usuario
+-- Procedimiento para actualizar la contraseña de un usuario
 CREATE OR REPLACE PROCEDURE update_user_password(
     p_user_id IN NUMBER,
     p_new_password IN VARCHAR2
@@ -400,7 +370,7 @@ EXCEPTION
 END;
 /
 
--- [ADMIN: Users] Procedimiento para ascender un usuario a administrador (IS_ADMIN = 1)
+--  Procedimiento para ascender un usuario a administrador (IS_ADMIN = 1)
 CREATE OR REPLACE PROCEDURE promote_user(
     p_user_id IN NUMBER
 ) AS
@@ -416,7 +386,7 @@ EXCEPTION
 END;
 /
 
--- [ADMIN: Users] Procedimiento para degradar un usuario a rol normal (IS_ADMIN = 0)
+-- Procedimiento para degradar un usuario a rol normal (IS_ADMIN = 0)
 CREATE OR REPLACE PROCEDURE demote_user(
     p_user_id IN NUMBER
 ) AS
@@ -432,7 +402,7 @@ EXCEPTION
 END;
 /
 
--- [ADMIN: Articles] Actualizar un artículo existente
+-- Actualizar un artículo existente
 CREATE OR REPLACE PROCEDURE update_article(
     p_article_id IN NUMBER,
     p_title IN VARCHAR2,
@@ -453,8 +423,7 @@ EXCEPTION
 END;
 /
 
--- [ADMIN: Articles] Eliminar un artículo (y sus relaciones/comentarios)
--- Gracias a ON DELETE CASCADE, solo necesitamos borrar el artículo principal
+-- Eliminar un artículo (y sus relaciones/comentarios)
 CREATE OR REPLACE PROCEDURE delete_article(
     p_article_id IN NUMBER
 ) AS
@@ -470,7 +439,7 @@ EXCEPTION
 END;
 /
 
--- [ADMIN: Categories] Actualizar una categoría existente
+-- Actualizar una categoría existente
 CREATE OR REPLACE PROCEDURE update_category(
     p_category_id IN NUMBER,
     p_new_name IN VARCHAR2
@@ -489,7 +458,7 @@ EXCEPTION
 END;
 /
 
--- [ADMIN: Categories] Eliminar una categoría (y sus relaciones de artículos)
+-- Eliminar una categoría (y sus relaciones de artículos)
 CREATE OR REPLACE PROCEDURE delete_category(
     p_category_id IN NUMBER
 ) AS
@@ -506,7 +475,7 @@ EXCEPTION
 END;
 /
 
--- [ADMIN: Tags] Actualizar una etiqueta (tag) existente
+-- Actualizar una etiqueta (tag) existente
 CREATE OR REPLACE PROCEDURE update_tag(
     p_tag_id IN NUMBER,
     p_new_name IN VARCHAR2
@@ -525,7 +494,7 @@ EXCEPTION
 END;
 /
 
--- [ADMIN: Tags] Eliminar una etiqueta (tag)
+-- Eliminar una etiqueta (tag)
 CREATE OR REPLACE PROCEDURE delete_tag(
     p_tag_id IN NUMBER
 ) AS
@@ -542,7 +511,7 @@ EXCEPTION
 END;
 /
 
--- [ADMIN: Comments] Eliminar un comentario
+-- Eliminar un comentario
 CREATE OR REPLACE PROCEDURE delete_comment(
     p_comment_id IN NUMBER
 ) AS
@@ -559,20 +528,13 @@ EXCEPTION
 END;
 /
 
--- [ADMIN: Users] Eliminar un usuario
+-- Eliminar un usuario
 CREATE OR REPLACE PROCEDURE delete_user(
     p_user_id IN NUMBER
 ) AS
 BEGIN
-    -- La eliminación de usuarios es compleja y se recomienda no hacerlo en producción.
-    -- Aquí, eliminamos todos los artículos y comentarios asociados, lo que puede fallar
-    -- si el usuario tiene artículos. Para simplificar, si quieres permitir la eliminación,
-    -- podrías hacer que los campos FK de article.user_id y comment.user_id permitan NULL
-    -- y hacer un UPDATE en lugar de un DELETE.
-
-    -- Si se permite, el administrador debe confirmar la eliminación de todo el contenido.
     
-    -- Eliminamos los artículos del usuario (que, gracias a CASCADE, borran relaciones y comentarios)
+    -- Eliminamos los artículos del usuario (borran relaciones y comentarios)
     DELETE FROM articles WHERE user_id = p_user_id;
 
     -- Eliminamos el usuario
@@ -598,8 +560,6 @@ EXECUTE add_tag('Guisos');
 EXECUTE add_tag('Sopas');
 EXECUTE add_tag('Vegano');
 EXECUTE add_tag('Sin Gluten');
-
--- Crear el usuario Admin usando el procedimiento CORREGIDO
 -- El procedimiento add_user asigna IS_ADMIN = 1 automáticamente si la clave es 'miblog'
 EXECUTE add_user('Admin', 'admin@gmail.com', 'miblog', 'miblog'); 
 

@@ -36,11 +36,9 @@ class AuthWindow(ctk.CTkToplevel):
         if user_data and password == user_data[3]:
             db_user_id = user_data[0]
             
-            # 1. Liberamos el foco de la ventana modal y la destruimos
             self.grab_release()
             self.destroy()
             
-            # 2. Lógica de Redirección basada en Rol (Tomada del primer código)
             if is_user_admin(db_user_id):
                 # Es Admin: Abrir Panel de Administración
                 AdminWindow(master=self.main_app_master, user_id=db_user_id)
@@ -52,7 +50,6 @@ class AuthWindow(ctk.CTkToplevel):
             messagebox.showerror("Error", "Correo o contraseña incorrectos.")
 
     def _load_images(self):
-        # Asegúrate de que las rutas de imagen sean manejadas correctamente
         images_path = Path(__file__).parent / "Imagenes"
         ruta_adorno = images_path / "adorno.png"
         ruta_fondo = images_path / "fondo.png"

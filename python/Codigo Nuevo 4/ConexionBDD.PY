@@ -16,7 +16,7 @@ def get_connection():
         return None
 
 # ----------------------------------
-# --- FUNCIONES DE USUARIOS (CRUD) ---
+# --- FUNCIONES DE USUARIOS ---
 # ----------------------------------
 
 def get_user_info(user_id):
@@ -50,7 +50,6 @@ def create_user(username, email, password):
     if conn is None: return False
     cur = conn.cursor()
     try:
-        # Se asume que el procedimiento add_user maneja el rol de administrador
         cur.callproc("add_user", [username, email, password])
         conn.commit()
         return True
@@ -74,7 +73,6 @@ def get_all_users():
         r_cursor = cur.callfunc("get_all_users", oracledb.DB_TYPE_CURSOR, [])
         return r_cursor.fetchall()
     except Exception as e:
-        # Corregido: La variable cur_close() estaba incorrecta
         print(f"Error al cargar la lista de usuarios para admin: {e}")
         return []
     finally:
@@ -200,7 +198,7 @@ def delete_user(user_id):
 
 
 # -----------------------------------
-# --- FUNCIONES DE ARTÍCULOS (CRUD) ---
+# --- FUNCIONES DE ARTÍCULOS ---
 # -----------------------------------
 
 def add_article(title, text, user_id):
@@ -215,7 +213,6 @@ def add_article(title, text, user_id):
         cur.callproc("add_article", [title, text, user_id])
         conn.commit()
         
-        # Estrategia para obtener el ID recién creado
         latest_id = get_latest_article_id_by_user(user_id)
         return latest_id
     except Exception as e:
@@ -226,7 +223,6 @@ def add_article(title, text, user_id):
         if conn: conn.close()
         
 def get_latest_article_id_by_user(user_id):
-    # Función de soporte para obtener el ID del último artículo creado
     conn = get_connection()
     if not conn: return None
     cur = conn.cursor()
@@ -278,10 +274,9 @@ def get_article_details(article_id):
         r_cursor = cur.callfunc("get_article_details", oracledb.DB_TYPE_CURSOR, [article_id])
         results = r_cursor.fetchall()
         
-        # Lee el CLOB (article_text)
+        # Lee article_text
         detailed_results = []
         for row in results:
-            # 0: id, 1: title, 2: text, 3: user_id, 4: date, 5: category_id
             content = row[2].read() if hasattr(row[2], 'read') else row[2]
             detailed_results.append((row[0], row[1], content, row[3], row[4], row[5]))
         
@@ -324,8 +319,6 @@ def delete_article(article_id):
     finally:
         if cur: cur.close()
         if conn: conn.close()
-
-# --- Funciones de lectura pública (necesarias para la interfaz principal) ---
 
 def get_all_articles():
     conn = get_connection()
@@ -596,19 +589,14 @@ def delete_comment(comment_id):
         if cur: cur.close()
         if conn: conn.close()
 
-# --- FUNCIONES DE ASOCIACIÓN (COMPLEMENTOS DE ARTÍCULOS) ---
-
-# Función existente, solo se incluye para referencia
+# --- FUNCIONES DE ASOCIACIÓN ---
 def associate_article_categories(article_id, category_id):
     """Asocia un artículo con una categoría (simplificado para el admin panel)."""
     conn = get_connection()
     if not conn: return
     cur = conn.cursor()
     try:
-        # Primero, se elimina la relación existente (asumiendo 1 categoría por artículo)
         cur.execute("DELETE FROM article_categories WHERE article_id = :1", [article_id])
-        
-        # Luego se añade la nueva relación
         cur.callproc("add_article_category", [article_id, category_id])
         conn.commit()
     except Exception as e:
@@ -616,15 +604,12 @@ def associate_article_categories(article_id, category_id):
     finally:
         if cur: cur.close()
         if conn: conn.close()
-
-# Función existente, solo se incluye para referencia
 def associate_article_tags(article_id, tag_ids):
     """Asocia múltiples tags a un artículo llamando al procedimiento almacenado."""
     conn = get_connection()
     if not conn: return
     cur = conn.cursor()
     try:
-        # Es común primero limpiar todas las tags y luego re-insertar las seleccionadas
         cur.execute("DELETE FROM article_tags WHERE article_id = :1", [article_id])
         
         for tag_id in tag_ids:
@@ -635,8 +620,6 @@ def associate_article_tags(article_id, tag_ids):
     finally:
         if cur: cur.close()
         if conn: conn.close()
-
-# --- Funciones de Comentarios Públicos (necesarias para la interfaz principal) ---
 
 def add_comment(article_id, user_id, text):
     conn = get_connection()
