@@ -4,8 +4,8 @@ from tkinter import messagebox
 from datetime import datetime
 
 # --- Configuración de Conexión ---
-DB_USER = "proyecto"
-DB_PASS = "proyecto"
+DB_USER = "pbases"
+DB_PASS = "pbases"
 DB_DSN = "localhost/XEPDB1"
 
 def get_connection():

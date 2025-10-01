@@ -1,26 +1,9 @@
 import customtkinter as ctk
 from tkinter import messagebox
-# Asegúrate de que este archivo exista en la misma carpeta
-import ConexionBDD as db 
+import ConexionBDD as db
+from perfilusuario import ProfileFrame # <-- MODIFICACIÓN 1: Se importa la clase correcta
 
-# --- Implementación de ProfileFrame (Placeholder Temporal) ---
-class ProfileFrame(ctk.CTkFrame):
-    def __init__(self, master, main_app, **kwargs):
-        super().__init__(master, **kwargs)
-        self.main_app = main_app
-        self.grid_columnconfigure(0, weight=1)
-        self.label = ctk.CTkLabel(self, text="Cargando Perfil...", font=ctk.CTkFont(size=24, weight="bold"))
-        self.label.grid(row=0, column=0, padx=20, pady=20, sticky="w")
-        # Asumiendo que main_app.logout existe
-        self.logout_btn = ctk.CTkButton(self, text="Cerrar Sesión 🚪", command=self.main_app.logout, fg_color="#F44336", hover_color="#D32F2F")
-        self.logout_btn.grid(row=1, column=0, padx=20, pady=20, sticky="w")
-    
-    def load_user_data(self, user_id_to_view):
-        # Asumiendo que db.get_user_info existe
-        username = db.get_user_info(user_id_to_view) 
-        self.label.configure(text=f"Perfil de: {username}")
-# ----------------------------------------------------------------------------
-
+# --- SE ELIMINÓ LA CLASE "ProfileFrame" TEMPORAL DE AQUÍ ---
 
 ctk.set_appearance_mode("Light")
 ctk.set_default_color_theme("blue")
@@ -34,7 +17,7 @@ class BlogApp(ctk.CTkToplevel):
         
         self.selected_category_id = None 
         self.tag_checkboxes = {}
-        self.is_admin = db.is_user_admin(self.user_id) # Error potencial si no existe db
+        self.is_admin = db.is_user_admin(self.user_id)
 
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
@@ -181,9 +164,9 @@ class BlogApp(ctk.CTkToplevel):
         self.publish_button = ctk.CTkButton(buttons_frame, text="Subir al blog 🚀", command=self.publish_article, corner_radius=8, fg_color="#D32F2F", hover_color="#B71C1C")
         self.publish_button.pack(side="left")
 
-
     def _create_profile_frame(self):
-        self.profile_frame = ProfileFrame(master=self.content_container, main_app=self, corner_radius=0, fg_color="white")
+        # Esta función ahora crea una instancia de la clase importada de perfilusuario.py
+        self.profile_frame = ProfileFrame(master=self.content_container, main_app=self)
 
     def _create_admin_panel(self):
         self.admin_panel_frame = ctk.CTkFrame(self.content_container, fg_color="white")
