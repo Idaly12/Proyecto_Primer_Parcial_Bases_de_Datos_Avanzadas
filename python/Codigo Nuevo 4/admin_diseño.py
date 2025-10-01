@@ -7,15 +7,12 @@ from pathlib import Path
 from datetime import datetime
 
 class AdminWindow(ctk.CTkToplevel):
-    """
-    Ventana de administración rediseñada con barra de navegación lateral.
-    Implementación de CRUD (Crear, Leer, Actualizar, Eliminar) completa.
-    """
+    
     def __init__(self, master, user_id):
         super().__init__(master=master)
         self.master_app = master
         self.user_id = user_id
-        # La función get_user_info ya debe existir en ConexionBDD
+        
         self.username = db.get_user_info(user_id) 
         
         self.title("Panel de Administración del Blog")
@@ -24,7 +21,7 @@ class AdminWindow(ctk.CTkToplevel):
         
         self.protocol("WM_DELETE_WINDOW", self.destroy)
         
-        # --- Paleta de Colores y Fuentes para fácil modificación ---
+        # --- Paleta de Colores
         self.SIDEBAR_BG = "#FFFFFF"
         self.CONTENT_BG = "#F5F5F5"
         self.CARD_BG = "#FFFFFF"
@@ -41,10 +38,10 @@ class AdminWindow(ctk.CTkToplevel):
         self._create_content_area()
         self._setup_content_frames()
 
-        # Mostrar el frame inicial (el dashboard)
+        # Mostrar el frame inicial 
         self.show_frame(self.dashboard_frame)
 
-    # 1. --- ESTRUCTURA PRINCIPAL (SIN MODIFICACIONES) ---
+    # 1. --- ESTRUCTURA PRINCIPAL 
 
     def _create_sidebar(self):
         """Crea la barra de navegación lateral izquierda con efecto de sombra."""
@@ -56,9 +53,9 @@ class AdminWindow(ctk.CTkToplevel):
         sidebar_frame.grid_propagate(False) 
         sidebar_frame.grid_rowconfigure(7, weight=1) 
 
-        # --- Título con imagen (MÉTODO CORREGIDO Y MÁS SEGURO) ---
+    
         try:
-            # Uso de Path para resolver la ruta de manera robusta
+            
             script_path = Path(__file__).parent
             image_path = script_path / "imagenes" / "adorno.png"
             
@@ -101,39 +98,38 @@ class AdminWindow(ctk.CTkToplevel):
         ).grid(row=8, column=0, padx=20, pady=20, sticky="s")
         
     def _create_content_area(self):
-        """Crea el contenedor principal donde se mostrarán los diferentes frames."""
+        # Crea el contenedor principal donde se mostrarán los diferentes frames.
         self.content_container = ctk.CTkFrame(self, fg_color=self.CONTENT_BG, corner_radius=0)
         self.content_container.grid(row=0, column=1, sticky="nsew")
         self.content_container.grid_rowconfigure(0, weight=1)
         self.content_container.grid_columnconfigure(0, weight=1)
 
     def _setup_content_frames(self):
-        """Inicializa todos los frames de contenido que se usarán."""
+        # Inicializa todos los frames de contenido que se usarán.
         self.dashboard_frame = ctk.CTkFrame(self.content_container, fg_color="transparent")
         self.categories_frame = ctk.CTkFrame(self.content_container, fg_color="transparent")
         self.users_frame = ctk.CTkFrame(self.content_container, fg_color="transparent")
         self.profile_frame = ctk.CTkFrame(self.content_container, fg_color="transparent")
         
-        # --- FRAMES REALES DE CONTENIDO (NO PLACEHOLDERS) ---
+      
         self.articles_frame = ctk.CTkFrame(self.content_container, fg_color="transparent")
-        # Frame adicional para el formulario de edición/creación de artículos
+        
         self.article_editor_frame = ctk.CTkFrame(self.content_container, fg_color="transparent") 
         self.comments_frame = ctk.CTkFrame(self.content_container, fg_color="transparent")
         self.tags_frame = ctk.CTkFrame(self.content_container, fg_color="transparent")
-        # --- FIN DE FRAMES REALES ---
+        # --- FIN DE FRAMES ---
 
         # Configurar el contenido de cada frame
         self._setup_dashboard_content(self.dashboard_frame)
         self._setup_categories_content(self.categories_frame)
         self._setup_users_content(self.users_frame)
         self._setup_profile_content(self.profile_frame)
-        self._setup_articles_content(self.articles_frame) # NUEVO: Contenido de Artículos
-        self._setup_comments_content(self.comments_frame) # NUEVO: Contenido de Comentarios
-        self._setup_tags_content(self.tags_frame)         # NUEVO: Contenido de Tags
+        self._setup_articles_content(self.articles_frame) 
+        self._setup_comments_content(self.comments_frame) 
+        self._setup_tags_content(self.tags_frame)         
         
     def show_frame(self, frame_to_show):
-        """Oculta todos los frames y muestra solo el seleccionado."""
-        # Asegúrate de incluir el frame de edición de artículos aquí
+        
         all_frames = [
             self.dashboard_frame, self.categories_frame, self.users_frame, 
             self.profile_frame, self.articles_frame, self.article_editor_frame, 
@@ -143,11 +139,8 @@ class AdminWindow(ctk.CTkToplevel):
             frame.grid_forget()
         frame_to_show.grid(row=0, column=0, sticky="nsew", padx=40, pady=30)
 
-    # 2. --- CONTENIDO DE CADA FRAME --- (Artículos, Comentarios, Tags, Categorías CRUD)
-
-    # --- INICIO: LÓGICA DE ARTÍCULOS (CRUD) ---
+    # --- LÓGICA DE ARTÍCULOS ---
     def _setup_articles_content(self, parent_frame):
-        """Crea la vista de listado de artículos (Read/Delete)."""
         parent_frame.grid_columnconfigure(0, weight=1)
         parent_frame.grid_rowconfigure(2, weight=1)
         
@@ -157,7 +150,7 @@ class AdminWindow(ctk.CTkToplevel):
         ctk.CTkButton(
             parent_frame, 
             text="➕ Nuevo Artículo", 
-            command=lambda: self.show_article_editor_frame(), # Pasa None para crear
+            command=lambda: self.show_article_editor_frame(), 
             fg_color="#4CAF50", 
             hover_color="#388E3C"
         ).grid(row=1, column=0, padx=10, pady=(0, 20), sticky="w")
@@ -173,7 +166,6 @@ class AdminWindow(ctk.CTkToplevel):
         for widget in self.articles_list_scrollframe.winfo_children():
             widget.destroy()
             
-        # db.get_all_articles_for_admin debe retornar (article_id, title, article_date, username)
         articles = db.get_all_articles_for_admin() 
 
         if not articles:
@@ -214,21 +206,18 @@ class AdminWindow(ctk.CTkToplevel):
             
         is_editing = article_id is not None
         
-        # El frame de edición se adapta mejor al layout de cuadrícula
         self.article_editor_frame.grid_columnconfigure(0, weight=1)
-        self.article_editor_frame.grid_rowconfigure(5, weight=1) # El textbox del contenido usa el espacio restante
+        self.article_editor_frame.grid_rowconfigure(5, weight=1) 
         
         title_text = "Editar Artículo Existente" if is_editing else "Crear Nuevo Artículo"
         ctk.CTkLabel(self.article_editor_frame, text=title_text, font=ctk.CTkFont(size=24, weight="bold")).grid(row=0, column=0, columnspan=2, pady=(10, 20), sticky="w")
         
-        # Campos del formulario
         ctk.CTkLabel(self.article_editor_frame, text="Título:", anchor="w").grid(row=1, column=0, padx=10, sticky="w")
         self.article_title_entry = ctk.CTkEntry(self.article_editor_frame, placeholder_text="Título del Artículo")
         self.article_title_entry.grid(row=2, column=0, padx=10, pady=(0, 10), sticky="ew")
 
-        # Asumimos que hay una variable de instancia para almacenar el ID de la categoría seleccionada
         self.article_category_var = ctk.StringVar(value="")
-        categories = db.get_all_categories() # Asume que retorna [(id, nombre)]
+        categories = db.get_all_categories() 
         category_map = {name: id for id, name in categories}
         category_names = [name for id, name in categories]
         
@@ -258,10 +247,8 @@ class AdminWindow(ctk.CTkToplevel):
 
         # Cargar datos si se está editando
         if is_editing:
-            # db.get_article_details debe retornar (article_id, title, article_text, user_id, article_date, category_id)
             details = db.get_article_details(article_id) 
             if details:
-                # La consulta trae 6 campos. Asumimos el orden
                 article_id, title, content, user_id, date, category_id = details[0]
                 self.article_title_entry.insert(0, title)
                 self.article_content_textbox.insert("0.0", content)
@@ -279,7 +266,6 @@ class AdminWindow(ctk.CTkToplevel):
     def handle_save_article(self, article_id, category_map):
         """Maneja la lógica de guardar o actualizar el artículo."""
         title = self.article_title_entry.get().strip()
-        # Se obtiene el contenido del CTkTextbox, del inicio ("1.0") al final menos un caracter ("end-1c")
         content = self.article_content_textbox.get("1.0", "end-1c").strip() 
         
         selected_category_name = self.article_category_var.get()
@@ -290,17 +276,15 @@ class AdminWindow(ctk.CTkToplevel):
             return
             
         if article_id:
-            # Lógica de Edición
             if db.update_article(article_id, title, content):
-                db.update_article_category(article_id, category_id) # Se asume una función para actualizar la relación
+                db.update_article_category(article_id, category_id) 
                 messagebox.showinfo("Éxito", "Artículo actualizado correctamente.", parent=self)
             else:
                 messagebox.showerror("Error", "Error al actualizar el artículo.", parent=self)
         else:
-            # Lógica de Creación (Se asume que add_article retorna el nuevo ID)
             new_id = db.add_article(title, content, self.user_id) 
             if new_id:
-                db.add_article_category(new_id, category_id) # Se asume una función para añadir la relación
+                db.add_article_category(new_id, category_id) 
                 messagebox.showinfo("Éxito", "Artículo publicado correctamente.", parent=self)
             else:
                 messagebox.showerror("Error", "Error al crear el artículo.", parent=self)
@@ -316,17 +300,16 @@ class AdminWindow(ctk.CTkToplevel):
                 self.load_admin_articles_list()
             else:
                 messagebox.showerror("Error", "No se pudo eliminar el artículo. Revise la base de datos.", parent=self)
-    # --- FIN: LÓGICA DE ARTÍCULOS (CRUD) ---
+    # --- FIN: LÓGICA DE ARTÍCULOS ---
 
-    # --- INICIO: LÓGICA DE CATEGORÍAS (CRUD COMPLETO) ---
+    # --- INICIO: LÓGICA DE CATEGORÍAS ---
     def _setup_categories_content(self, parent_frame):
-        """ Configuración del contenido de la gestión de categorías (con botones CRUD). """
         parent_frame.grid_columnconfigure(0, weight=1)
         parent_frame.grid_rowconfigure(3, weight=1)
         
         ctk.CTkLabel(parent_frame, text="Gestión de Categorías 📚", font=ctk.CTkFont(size=24, weight="bold")).grid(row=0, column=0, padx=10, pady=(10, 20), sticky="w")
         
-        # Sección de "Agregar" (C)
+        # Sección de "Agregar" 
         entry_frame = ctk.CTkFrame(parent_frame, fg_color="transparent")
         entry_frame.grid(row=1, column=0, padx=10, pady=(0, 20), sticky="ew")
         entry_frame.grid_columnconfigure(0, weight=1)
@@ -334,7 +317,7 @@ class AdminWindow(ctk.CTkToplevel):
         self.new_category_entry.grid(row=0, column=0, sticky="ew", padx=(0, 10))
         ctk.CTkButton(entry_frame, text="Agregar", command=self.handle_add_category, fg_color=self.ACCENT_COLOR, hover_color="#673AB7", height=40).grid(row=0, column=1)
         
-        # Sección de "Listado" (R, U, D)
+        # Sección de "Listado" 
         ctk.CTkLabel(parent_frame, text="Categorías Existentes (Editar/Eliminar):", font=ctk.CTkFont(size=18, weight="bold")).grid(row=2, column=0, padx=10, pady=(10, 5), sticky="w")
         self.categories_list_scrollframe = ctk.CTkScrollableFrame(parent_frame, label_text="ID | Nombre de Categoría")
         self.categories_list_scrollframe.grid(row=3, column=0, padx=10, pady=(0, 20), sticky="nsew")
@@ -342,11 +325,11 @@ class AdminWindow(ctk.CTkToplevel):
         self.load_admin_categories_list()
 
     def load_admin_categories_list(self):
-        """Carga la lista de categorías con opciones de edición y eliminación."""
+        # Carga la lista de categorías con opciones de edición y eliminación.
         for widget in self.categories_list_scrollframe.winfo_children():
             widget.destroy()
         
-        categories = db.get_all_categories() # Asume que retorna [(id, nombre)]
+        categories = db.get_all_categories() 
         
         if not categories:
             ctk.CTkLabel(self.categories_list_scrollframe, text="No hay categorías creadas.").pack(pady=20)
@@ -362,7 +345,7 @@ class AdminWindow(ctk.CTkToplevel):
             action_frame = ctk.CTkFrame(row_frame, fg_color="transparent")
             action_frame.grid(row=0, column=1, sticky="e", padx=5)
             
-            # Botón de Editar (U)
+            # Botón de Editar 
             ctk.CTkButton(
                 action_frame, 
                 text="Editar", 
@@ -370,7 +353,7 @@ class AdminWindow(ctk.CTkToplevel):
                 width=70, height=28, fg_color="#FFB300", hover_color="#FF8F00"
             ).pack(side="left", padx=5)
             
-            # Botón de Eliminar (D)
+            # Botón de Eliminar 
             ctk.CTkButton(
                 action_frame, 
                 text="Eliminar", 
@@ -384,7 +367,6 @@ class AdminWindow(ctk.CTkToplevel):
         if not category_name:
             messagebox.showwarning("Advertencia", "Ingrese un nombre para la categoría.", parent=self)
             return
-        # admin_add_category debe llamar al procedimiento add_category
         if db.admin_add_category(category_name): 
             messagebox.showinfo("Éxito", f"Categoría '{category_name}' creada.", parent=self)
             self.new_category_entry.delete(0, "end")
@@ -399,7 +381,7 @@ class AdminWindow(ctk.CTkToplevel):
         ).get_input()
         
         if new_name is not None and new_name.strip() and new_name != current_name:
-            if db.update_category(cat_id, new_name.strip()): # Llama al procedimiento update_category
+            if db.update_category(cat_id, new_name.strip()): 
                 messagebox.showinfo("Éxito", f"Categoría {cat_id} actualizada a '{new_name}'.", parent=self)
                 self.load_admin_categories_list()
             else:
@@ -408,16 +390,16 @@ class AdminWindow(ctk.CTkToplevel):
     def handle_delete_category(self, cat_id):
         """ Maneja la eliminación de categorías (D). """
         if messagebox.askyesno("Confirmar Eliminación", f"¿Estás seguro de ELIMINAR la categoría con ID {cat_id}? Esto eliminará las relaciones con artículos.", parent=self):
-            if db.delete_category(cat_id): # Llama al procedimiento delete_category
+            if db.delete_category(cat_id): 
                 messagebox.showinfo("Éxito", f"Categoría {cat_id} eliminada correctamente.", parent=self)
                 self.load_admin_categories_list()
             else:
                 messagebox.showerror("Error", "No se pudo eliminar la categoría. Revise la base de datos.", parent=self)
-    # --- FIN: LÓGICA DE CATEGORÍAS (CRUD COMPLETO) ---
+    # --- FIN: LÓGICA DE CATEGORÍAS ---
 
-    # --- INICIO: LÓGICA DE COMENTARIOS (READ, DELETE) ---
+    # --- INICIO: LÓGICA DE COMENTARIOS ---
     def _setup_comments_content(self, parent_frame):
-        """ Crea la vista de moderación de comentarios. """
+        # Crea la vista de moderación de comentarios.
         parent_frame.grid_columnconfigure(0, weight=1)
         parent_frame.grid_rowconfigure(1, weight=1)
         
@@ -429,11 +411,10 @@ class AdminWindow(ctk.CTkToplevel):
         self.load_admin_comments_list()
 
     def load_admin_comments_list(self):
-        """ Carga la lista de comentarios para moderación. """
+        # Carga la lista de comentarios para moderación. 
         for widget in self.comments_list_scroll_frame.winfo_children():
             widget.destroy()
             
-        # db.get_all_comments_for_admin debe retornar (comment_id, commenter_name, comment_text, article_title, created_at)
         comments = db.get_all_comments_for_admin()
         
         if not comments:
@@ -484,17 +465,17 @@ class AdminWindow(ctk.CTkToplevel):
                 self.load_admin_comments_list()
             else:
                 messagebox.showerror("Error", "No se pudo eliminar el comentario.", parent=self)
-    # --- FIN: LÓGICA DE COMENTARIOS (READ, DELETE) ---
+    # --- FIN: LÓGICA DE COMENTARIOS ---
 
-    # --- INICIO: LÓGICA DE TAGS (CRUD COMPLETO) ---
+    # --- INICIO: LÓGICA DE TAGS ---
     def _setup_tags_content(self, parent_frame):
-        """ Configuración del contenido de la gestión de tags. """
+        # Configuración del contenido de la gestión de tags. 
         parent_frame.grid_columnconfigure(0, weight=1)
         parent_frame.grid_rowconfigure(3, weight=1)
         
         ctk.CTkLabel(parent_frame, text="Gestión de Etiquetas (Tags) 🏷️", font=ctk.CTkFont(size=24, weight="bold")).grid(row=0, column=0, padx=10, pady=(10, 20), sticky="w")
         
-        # Sección de "Agregar" (C)
+        # Sección de "Agregar" 
         entry_frame = ctk.CTkFrame(parent_frame, fg_color="transparent")
         entry_frame.grid(row=1, column=0, padx=10, pady=(0, 20), sticky="ew")
         entry_frame.grid_columnconfigure(0, weight=1)
@@ -502,7 +483,7 @@ class AdminWindow(ctk.CTkToplevel):
         self.new_tag_entry.grid(row=0, column=0, sticky="ew", padx=(0, 10))
         ctk.CTkButton(entry_frame, text="Agregar", command=self.handle_add_tag, fg_color=self.ACCENT_COLOR, hover_color="#673AB7", height=40).grid(row=0, column=1)
         
-        # Sección de "Listado" (R, U, D)
+        # Sección de "Listado" 
         ctk.CTkLabel(parent_frame, text="Tags Existentes (Editar/Eliminar):", font=ctk.CTkFont(size=18, weight="bold")).grid(row=2, column=0, padx=10, pady=(10, 5), sticky="w")
         self.tags_list_scrollframe = ctk.CTkScrollableFrame(parent_frame, label_text="ID | Nombre de Etiqueta")
         self.tags_list_scrollframe.grid(row=3, column=0, padx=10, pady=(0, 20), sticky="nsew")
@@ -514,7 +495,7 @@ class AdminWindow(ctk.CTkToplevel):
         for widget in self.tags_list_scrollframe.winfo_children():
             widget.destroy()
         
-        tags = db.get_all_tags() # Asume que retorna [(id, nombre)]
+        tags = db.get_all_tags() 
         
         if not tags:
             ctk.CTkLabel(self.tags_list_scrollframe, text="No hay etiquetas creadas.").pack(pady=20)
@@ -530,7 +511,7 @@ class AdminWindow(ctk.CTkToplevel):
             action_frame = ctk.CTkFrame(row_frame, fg_color="transparent")
             action_frame.grid(row=0, column=1, sticky="e", padx=5)
             
-            # Botón de Editar (U)
+            # Botón de Editar 
             ctk.CTkButton(
                 action_frame, 
                 text="Editar", 
@@ -538,7 +519,7 @@ class AdminWindow(ctk.CTkToplevel):
                 width=70, height=28, fg_color="#FFB300", hover_color="#FF8F00"
             ).pack(side="left", padx=5)
             
-            # Botón de Eliminar (D)
+            # Botón de Eliminar
             ctk.CTkButton(
                 action_frame, 
                 text="Eliminar", 
@@ -547,7 +528,7 @@ class AdminWindow(ctk.CTkToplevel):
             ).pack(side="left", padx=5)
 
     def handle_add_tag(self):
-        """ Maneja la creación de tags (C). """
+        # Maneja la creación de tags 
         tag_name = self.new_tag_entry.get().strip()
         if not tag_name:
             messagebox.showwarning("Advertencia", "Ingrese un nombre para la etiqueta.", parent=self)
@@ -580,12 +561,11 @@ class AdminWindow(ctk.CTkToplevel):
                 self.load_admin_tags_list()
             else:
                 messagebox.showerror("Error", "No se pudo eliminar la etiqueta. Revise la base de datos.", parent=self)
-    # --- FIN: LÓGICA DE TAGS (CRUD COMPLETO) ---
+    # --- FIN: LÓGICA DE TAGS ---
     
-    # --- LÓGICA DE DASHBOARD, PERFIL Y USUARIOS (Mantenida, con adición de DELETE USER) ---
+    # --- LÓGICA DE DASHBOARD, PERFIL Y USUARIOS ---
 
     def _setup_dashboard_content(self, parent_frame):
-        """Crea el contenido del dashboard principal con las tarjetas en formato de lista."""
         parent_frame.grid_columnconfigure(0, weight=1) 
 
         ctk.CTkLabel(parent_frame, text="Bienvenido al Panel de Administración del Blog", font=ctk.CTkFont(size=28, weight="bold"), text_color=self.PRIMARY_TEXT, anchor="w").pack(fill="x", pady=(0, 5))
@@ -601,7 +581,7 @@ class AdminWindow(ctk.CTkToplevel):
         self._create_dashboard_card(cards_container, "Tags", "Gestiona las etiquetas para tus artículos.", lambda: self.show_frame(self.tags_frame))
         self._create_dashboard_card(cards_container, "Usuarios", "Administra los usuarios del sistema.", lambda: self.show_frame(self.users_frame))
 
-    # --- LÓGICA DE USUARIOS (Mantenida + Botón Eliminar) ---
+    # --- LÓGICA DE USUARIOS ---
 
     def _setup_users_content(self, parent_frame):
         parent_frame.grid_columnconfigure(0, weight=1)
@@ -615,7 +595,7 @@ class AdminWindow(ctk.CTkToplevel):
     def load_user_list_for_admin(self):
         for widget in self.user_list_scroll_frame.winfo_children():
             widget.destroy()
-        users = db.get_all_users() # Asume que retorna (uid, username, email, is_admin)
+        users = db.get_all_users() 
         if not users:
             ctk.CTkLabel(self.user_list_scroll_frame, text="No hay usuarios registrados.").pack(pady=10)
             return
@@ -685,13 +665,10 @@ class AdminWindow(ctk.CTkToplevel):
         if new_pass != confirm_pass:
             messagebox.showerror("Error", "Las contraseñas nuevas no coinciden.", parent=self)
             return
-        # update_admin_password debe llamar al procedimiento update_user_password(self.user_id, new_pass)
         if db.update_admin_password(self.user_id, new_pass): 
             messagebox.showinfo("Éxito", "Contraseña actualizada correctamente.", parent=self)
             self.admin_new_password_entry.delete(0, "end")
             self.admin_confirm_password_entry.delete(0, "end")
-
-    # --- HELPERS DE UI (SIN MODIFICACIONES) ---
 
     def _create_nav_button(self, parent, text, command, row):
         """Crea un botón estandarizado para la barra de navegación lateral."""
@@ -714,7 +691,7 @@ class AdminWindow(ctk.CTkToplevel):
         card = ctk.CTkFrame(parent, fg_color=self.CARD_BG, border_width=1, border_color="#E0E0E0", corner_radius=12)
         card.pack(fill="x", padx=15, pady=8) 
         
-        # --- Habilitar el hover y el click en toda la tarjeta ---
+        # --- Habilitar el hover y el click ---
         card.bind("<Enter>", lambda e: card.configure(fg_color="#F9F9F9"))
         card.bind("<Leave>", lambda e: card.configure(fg_color=self.CARD_BG))
         card.bind("<Button-1>", lambda e: command())

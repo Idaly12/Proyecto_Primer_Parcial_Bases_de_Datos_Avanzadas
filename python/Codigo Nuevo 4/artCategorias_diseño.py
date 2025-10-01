@@ -1,9 +1,8 @@
 import customtkinter as ctk
 from tkinter import messagebox
-# Asegúrate de que este archivo exista en la misma carpeta
 import ConexionBDD as db 
 
-# --- Implementación de ProfileFrame (Placeholder Temporal) ---
+# --- Implementación de ProfileFrame ---
 class ProfileFrame(ctk.CTkFrame):
     def __init__(self, master, main_app, **kwargs):
         super().__init__(master, **kwargs)
@@ -11,16 +10,12 @@ class ProfileFrame(ctk.CTkFrame):
         self.grid_columnconfigure(0, weight=1)
         self.label = ctk.CTkLabel(self, text="Cargando Perfil...", font=ctk.CTkFont(size=24, weight="bold"))
         self.label.grid(row=0, column=0, padx=20, pady=20, sticky="w")
-        # Asumiendo que main_app.logout existe
         self.logout_btn = ctk.CTkButton(self, text="Cerrar Sesión 🚪", command=self.main_app.logout, fg_color="#F44336", hover_color="#D32F2F")
         self.logout_btn.grid(row=1, column=0, padx=20, pady=20, sticky="w")
     
     def load_user_data(self, user_id_to_view):
-        # Asumiendo que db.get_user_info existe
         username = db.get_user_info(user_id_to_view) 
         self.label.configure(text=f"Perfil de: {username}")
-# ----------------------------------------------------------------------------
-
 
 ctk.set_appearance_mode("Light")
 ctk.set_default_color_theme("blue")
@@ -34,7 +29,7 @@ class BlogApp(ctk.CTkToplevel):
         
         self.selected_category_id = None 
         self.tag_checkboxes = {}
-        self.is_admin = db.is_user_admin(self.user_id) # Error potencial si no existe db
+        self.is_admin = db.is_user_admin(self.user_id) 
 
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
@@ -50,7 +45,6 @@ class BlogApp(ctk.CTkToplevel):
     
     def logout(self):
         try:
-            # Importación local para evitar dependencia circular
             from logindiseño import AuthWindow
             self.destroy()
             AuthWindow(master=self.master)
@@ -94,7 +88,7 @@ class BlogApp(ctk.CTkToplevel):
         self._create_profile_frame()
         self._create_admin_panel() 
 
-        # NUEVO: Frame para la edición/creación de artículos (fuera de las pestañas del Admin Panel)
+        # NUEVO: Frame para la edición/creación de artículos
         self.article_editor_frame = ctk.CTkFrame(self.content_container, fg_color="white")
         
     def _create_sidebar(self):
@@ -199,21 +193,21 @@ class BlogApp(ctk.CTkToplevel):
         self.admin_tabview.grid(row=1, column=0, padx=20, pady=10, sticky="nsew")
 
         # --- Pestañas de Administración ---
-        self.tab_articles = self.admin_tabview.add("Artículos") # NUEVA
+        self.tab_articles = self.admin_tabview.add("Artículos") 
         self.tab_categories = self.admin_tabview.add("Categorías")
-        self.tab_tags = self.admin_tabview.add("Tags") # NUEVA
-        self.tab_comments = self.admin_tabview.add("Comentarios") # NUEVA
+        self.tab_tags = self.admin_tabview.add("Tags") 
+        self.tab_comments = self.admin_tabview.add("Comentarios") 
         self.tab_users = self.admin_tabview.add("Usuarios y Roles")
         self.tab_password = self.admin_tabview.add("Contraseña Admin")
         
-        self._setup_articles_tab() # NUEVO SETUP
+        self._setup_articles_tab() 
         self._setup_categories_tab()
-        self._setup_tags_tab() # NUEVO SETUP
-        self._setup_comments_tab() # NUEVO SETUP
+        self._setup_tags_tab() 
+        self._setup_comments_tab() 
         self._setup_users_tab()
         self._setup_password_tab()
 
-    # --- Funciones de soporte CRUD y UI ---
+    # --- Funciones de soporte ---
 
     def load_category_buttons(self):
         for widget in self.categories_button_frame.winfo_children():
@@ -270,9 +264,8 @@ class BlogApp(ctk.CTkToplevel):
         self.upload_frame.grid_forget()
         self.admin_panel_frame.grid_forget()
         self.profile_frame.grid_forget()
-        self.article_editor_frame.grid_forget() # Ocultar el nuevo frame de edición
+        self.article_editor_frame.grid_forget() 
 
-        # Asegúrate de usar .grid() para mostrar el frame
         if frame_to_show == self.articles_frame:
             frame_to_show.grid(row=0, column=1, sticky="nsew", padx=30, pady=30)
         elif frame_to_show == self.article_editor_frame:
@@ -282,9 +275,8 @@ class BlogApp(ctk.CTkToplevel):
 
     # --- IMPLEMENTACIÓN DE LOS MÉTODOS DEL EDITOR DE ARTÍCULOS ---
     
-    # 1. El método `show_article_editor_frame` (Versión mejorada)
     def show_article_editor_frame(self, article_id=None):
-        """Muestra el formulario para crear un artículo nuevo (None) o editar uno existente (ID)."""
+        # Muestra el formulario para crear un artículo nuevo o editar uno existente
         
         # 1. Mostrar el frame de edición/creación
         self.show_frame(self.article_editor_frame)
@@ -298,7 +290,7 @@ class BlogApp(ctk.CTkToplevel):
         # Configurar la cuadrícula
         self.article_editor_frame.grid_columnconfigure(0, weight=1)
         self.article_editor_frame.grid_columnconfigure(1, weight=1)
-        self.article_editor_frame.grid_rowconfigure(4, weight=1) # El textbox del contenido usa el espacio restante
+        self.article_editor_frame.grid_rowconfigure(4, weight=1)  
         
         # --- TÍTULO Y BOTÓN DE REGRESO ---
         title_text = "✏️ Editar Receta" if is_editing else "✨ Publicar Nueva Receta"
@@ -310,11 +302,11 @@ class BlogApp(ctk.CTkToplevel):
 
         ctk.CTkLabel(header_container, text=title_text, font=ctk.CTkFont(size=28, weight="bold")).grid(row=0, column=0, sticky="w")
         
-        # Botón para volver al listado de artículos (Mantiene el diseño solicitado)
+        # Botón para volver al listado de artículos
         btn_back = ctk.CTkButton(
             header_container, 
             text="← Volver al Listado", 
-            command=lambda: self.show_frame(self.tab_articles), # Vuelve a la Pestaña de Artículos
+            command=lambda: self.show_frame(self.tab_articles), 
             fg_color="#616161", 
             hover_color="#424242",
             width=150
@@ -345,7 +337,7 @@ class BlogApp(ctk.CTkToplevel):
         self.article_category_combobox.grid(row=2, column=1, padx=10, pady=(0, 15), sticky="ew")
         self.article_category_combobox.set(category_names[0] if category_names else "Sin Categorías")
         
-        # Contenido (Instrucciones) - CUADRO DE TEXTO MEJORADO
+        # Contenido (Instrucciones)
         ctk.CTkLabel(self.article_editor_frame, text="3. Contenido (Ingredientes y Pasos):", font=ctk.CTkFont(size=14, weight="bold"), anchor="w").grid(row=3, column=0, columnspan=2, padx=10, sticky="w")
         
         self.article_content_textbox = ctk.CTkTextbox(
@@ -354,7 +346,7 @@ class BlogApp(ctk.CTkToplevel):
             wrap="word",
             corner_radius=10, 
             border_width=2, 
-            border_color="#D32F2F", # Borde más visible
+            border_color="#D32F2F", 
             fg_color="#FFFFFF" 
         )
         self.article_content_textbox.grid(row=4, column=0, columnspan=2, padx=10, pady=(0, 20), sticky="nsew")
@@ -380,8 +372,6 @@ class BlogApp(ctk.CTkToplevel):
         if is_editing:
             details = db.get_article_details(article_id) 
             if details:
-                # El resultado es una lista de tuplas, tomamos el primer elemento
-                # Asume el orden: (id, title, content, user_id, date, category_id)
                 _, title, content, _, _, category_id = details[0]
                 self.article_title_entry.insert(0, title)
                 self.article_content_textbox.insert("0.0", content)
@@ -393,9 +383,9 @@ class BlogApp(ctk.CTkToplevel):
                         self.article_category_combobox.set(current_category_name)
             else:
                 messagebox.showerror("Error", "No se encontraron los detalles del artículo.", parent=self)
-                self.show_frame(self.tab_articles) # Volver al listado de admin
+                self.show_frame(self.tab_articles) 
 
-    # 2. El método `handle_save_article` (Lógica de guardado)
+    # 2. El método de (Lógica de guardado)
     def handle_save_article(self, article_id, category_map):
         """Maneja la lógica de guardar o actualizar el artículo."""
         title = self.article_title_entry.get().strip()
@@ -527,10 +517,9 @@ class BlogApp(ctk.CTkToplevel):
             messagebox.showerror("Error", "Debes seleccionar una categoría.", parent=self)
             return
             
-        new_article_id = db.add_article(title, content, self.user_id) # Cambio: usar add_article
+        new_article_id = db.add_article(title, content, self.user_id) 
         
         if new_article_id:
-            # db.associate_article_categories asume que puede manejar un solo ID
             db.associate_article_categories(new_article_id, self.selected_category_id) 
             selected_tag_ids = [tag_id for tag_id, var in self.tag_checkboxes.items() if var.get() != "off"]
             if selected_tag_ids:
@@ -653,16 +642,16 @@ class BlogApp(ctk.CTkToplevel):
         # Recargar listas antes de mostrar el panel
         self.load_user_list_for_admin() 
         self.load_category_list_for_admin()
-        self.load_article_list_for_admin() # NUEVO
-        self.load_tag_list_for_admin() # NUEVO
-        self.load_comment_list_for_admin() # NUEVO
+        self.load_article_list_for_admin()
+        self.load_tag_list_for_admin() 
+        self.load_comment_list_for_admin() 
         self.show_frame(self.admin_panel_frame)
         
     # =================================================================================
-    # --- FUNCIONES DE SETUP Y CARGA DEL ADMIN PANEL (CRUD IMPLEMENTATION) ---
+    # --- FUNCIONES DE SETUP Y CARGA DEL ADMIN PANEL  ---
     # =================================================================================
 
-    # --- PESTAÑA DE ARTÍCULOS (CRUD) ---
+    # --- PESTAÑA DE ARTÍCULOS ---
     
     def _setup_articles_tab(self):
         self.tab_articles.grid_columnconfigure(0, weight=1)
@@ -690,7 +679,6 @@ class BlogApp(ctk.CTkToplevel):
         for widget in self.article_list_frame.winfo_children():
             widget.destroy()
             
-        # Asume que db.get_all_articles_for_admin retorna (id, title, date, username)
         articles = db.get_all_articles_for_admin()
         
         if not articles:
@@ -718,11 +706,11 @@ class BlogApp(ctk.CTkToplevel):
             if db.delete_article(article_id):
                 messagebox.showinfo("Éxito", "Artículo eliminado correctamente.", parent=self)
                 self.load_article_list_for_admin()
-                self.load_articles() # Recarga la vista principal
+                self.load_articles() 
             else:
                 messagebox.showerror("Error", "No se pudo eliminar el artículo.", parent=self)
 
-    # --- PESTAÑA DE CATEGORÍAS (CRUD COMPLETO) ---
+    # --- PESTAÑA DE CATEGORÍAS ---
 
     def _setup_categories_tab(self):
         self.tab_categories.grid_columnconfigure(0, weight=1)
@@ -779,7 +767,6 @@ class BlogApp(ctk.CTkToplevel):
             self.load_category_list_for_admin()
             messagebox.showinfo("Éxito", f"Categoría '{cat_name}' agregada.")
         else:
-            # db.admin_add_category ya maneja el messagebox de error
             pass 
             
     def _confirm_edit_category(self, cat_id, current_name):
@@ -804,7 +791,7 @@ class BlogApp(ctk.CTkToplevel):
             else:
                 messagebox.showerror("Error", "No se pudo eliminar la categoría. Asegúrese de que no haya dependencias.", parent=self)
 
-    # --- PESTAÑA DE TAGS (CRUD COMPLETO) ---
+    # --- PESTAÑA DE TAGS ---
     
     def _setup_tags_tab(self):
         self.tab_tags.grid_columnconfigure(0, weight=1)
@@ -861,7 +848,7 @@ class BlogApp(ctk.CTkToplevel):
             self.load_tag_list_for_admin()
             messagebox.showinfo("Éxito", f"Etiqueta '{tag_name}' agregada.")
         else:
-            pass # El error lo maneja db.add_tag
+            pass 
             
     def _confirm_edit_tag(self, tag_id, current_name):
         new_name = ctk.CTkInputDialog(text=f"Editando Etiqueta ID {tag_id}. Ingrese el nuevo nombre:", title="Editar Etiqueta", initial_value=current_name).get_input()
@@ -885,7 +872,7 @@ class BlogApp(ctk.CTkToplevel):
             else:
                 messagebox.showerror("Error", "No se pudo eliminar la etiqueta.", parent=self)
 
-    # --- PESTAÑA DE COMENTARIOS (READ, DELETE) ---
+    # --- PESTAÑA DE COMENTARIOS ---
 
     def _setup_comments_tab(self):
         self.tab_comments.grid_columnconfigure(0, weight=1)
@@ -903,7 +890,6 @@ class BlogApp(ctk.CTkToplevel):
         for widget in self.comment_list_frame.winfo_children():
             widget.destroy()
 
-        # Asume que db.get_all_comments_for_admin retorna (id, name, text, article_title, created_at)
         comments = db.get_all_comments_for_admin()
         
         if not comments:
@@ -932,7 +918,7 @@ class BlogApp(ctk.CTkToplevel):
             else:
                 messagebox.showerror("Error", "No se pudo eliminar el comentario.", parent=self)
                 
-    # --- PESTAÑA DE USUARIOS Y ROLES (Mantenida + DELETE USER) ---
+    # --- PESTAÑA DE USUARIOS Y ROLES ---
 
     def _setup_users_tab(self):
         self.tab_users.grid_columnconfigure(0, weight=1)
@@ -1020,7 +1006,7 @@ class BlogApp(ctk.CTkToplevel):
             messagebox.showinfo("Éxito", "Rol de administrador eliminado.", parent=self)
             self.load_user_list_for_admin()
             
-    # --- PESTAÑA DE CONTRASEÑA (Mantenida) ---
+    # --- PESTAÑA DE CONTRASEÑA ---
 
     def _setup_password_tab(self):
         self.tab_password.grid_columnconfigure(0, weight=1)

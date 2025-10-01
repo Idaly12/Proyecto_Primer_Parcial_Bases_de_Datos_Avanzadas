@@ -1,4 +1,4 @@
-# perfilusuario.py (MODIFICADO PARA CERRAR SESIÓN)
+
 import customtkinter as ctk
 import ConexionBDD as db
 from PIL import Image
@@ -59,9 +59,7 @@ class ProfileFrame(ctk.CTkFrame):
         self.description_label.grid(row=2, column=0, pady=(0, 20))
 
         ctk.CTkFrame(self.profile_info_container, height=1, fg_color="gray80").grid(row=3, column=0, sticky="ew", pady=(10,20))
-
-        # --- BOTÓN MODIFICADO ---
-        # Cambiamos el texto a "Cerrar Sesión" y el comando a `self.main_app.logout`
+        
         logout_button = ctk.CTkButton(self.profile_info_container, text="Cerrar Sesión", command=self.main_app.logout,
                                           fg_color="transparent", hover_color="gray80", text_color="gray",
                                           font=self.bold_font, height=40, corner_radius=8,
