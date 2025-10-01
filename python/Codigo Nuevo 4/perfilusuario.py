@@ -1,8 +1,4 @@
-<<<<<<< HEAD:Codigo Nuevo 4/perfilusuario.py
-# perfilusuario.py (CORREGIDO)
-=======
-
->>>>>>> 768ddbb4e63c4a7a0e384f91362f27fe26b9f988:python/Codigo Nuevo 4/perfilusuario.py
+# perfilusuario.py (CÓDIGO LIMPIO Y CORRECTO)
 import customtkinter as ctk
 import ConexionBDD as db
 from PIL import Image
@@ -42,7 +38,6 @@ class ProfileFrame(ctk.CTkFrame):
         self.profile_info_container.grid(row=1, column=0, sticky="nsew", padx=20, pady=(0, 20))
         self.profile_info_container.grid_columnconfigure(0, weight=1)
 
-        # <-- CORREGIDO: Ruta estandarizada a minúsculas.
         images_path = Path(__file__).parent / "imagenes"
         user_icon_path = images_path / "user_icon.png"
 
@@ -64,11 +59,7 @@ class ProfileFrame(ctk.CTkFrame):
         self.description_label.grid(row=2, column=0, pady=(0, 20))
 
         ctk.CTkFrame(self.profile_info_container, height=1, fg_color="gray80").grid(row=3, column=0, sticky="ew", pady=(10,20))
-<<<<<<< HEAD:Codigo Nuevo 4/perfilusuario.py
 
-=======
-        
->>>>>>> 768ddbb4e63c4a7a0e384f91362f27fe26b9f988:python/Codigo Nuevo 4/perfilusuario.py
         logout_button = ctk.CTkButton(self.profile_info_container, text="Cerrar Sesión", command=self.main_app.logout,
                                           fg_color="transparent", hover_color="gray80", text_color="gray",
                                           font=self.bold_font, height=40, corner_radius=8,
@@ -102,7 +93,6 @@ class ProfileFrame(ctk.CTkFrame):
         if not self.current_user_id:
             return
 
-        # Ahora esta llamada funcionará porque la función ya existe en ConexionBDD.PY
         articles = db.get_articles_by_user(self.current_user_id)
 
         if not articles:

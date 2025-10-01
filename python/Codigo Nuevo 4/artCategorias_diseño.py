@@ -1,24 +1,12 @@
 import customtkinter as ctk
 from tkinter import messagebox
-import ConexionBDD as db 
-
-# --- Implementación de ProfileFrame ---
-class ProfileFrame(ctk.CTkFrame):
-    def __init__(self, master, main_app, **kwargs):
-        super().__init__(master, **kwargs)
-        self.main_app = main_app
-        self.grid_columnconfigure(0, weight=1)
-        self.label = ctk.CTkLabel(self, text="Cargando Perfil...", font=ctk.CTkFont(size=24, weight="bold"))
-        self.label.grid(row=0, column=0, padx=20, pady=20, sticky="w")
-        self.logout_btn = ctk.CTkButton(self, text="Cerrar Sesión 🚪", command=self.main_app.logout, fg_color="#F44336", hover_color="#D32F2F")
-        self.logout_btn.grid(row=1, column=0, padx=20, pady=20, sticky="w")
-    
-    def load_user_data(self, user_id_to_view):
-        username = db.get_user_info(user_id_to_view) 
-        self.label.configure(text=f"Perfil de: {username}")
+import ConexionBDD as db
+from perfilusuario import ProfileFrame # <-- 1. SE IMPORTA TU DISEÑO REAL
 
 ctk.set_appearance_mode("Light")
 ctk.set_default_color_theme("blue")
+
+# --- 2. SE ELIMINÓ LA CLASE ProfileFrame TEMPORAL DE AQUÍ ---
 
 class BlogApp(ctk.CTkToplevel):
     def __init__(self, master, user_id):
@@ -29,7 +17,7 @@ class BlogApp(ctk.CTkToplevel):
         
         self.selected_category_id = None 
         self.tag_checkboxes = {}
-        self.is_admin = db.is_user_admin(self.user_id) 
+        self.is_admin = db.is_user_admin(self.user_id)
 
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
@@ -52,7 +40,6 @@ class BlogApp(ctk.CTkToplevel):
             messagebox.showerror("Error de Cierre", "No se encontró logindiseño.AuthWindow.", parent=self)
             self.master.destroy()
 
-## --- ESTRUCTURA PRINCIPAL Y ENCABEZADO ---
     def _create_header(self):
         self.header_frame = ctk.CTkFrame(self, height=70, corner_radius=0, fg_color="white")
         self.header_frame.grid(row=0, column=0, columnspan=2, sticky="ew")
@@ -88,7 +75,6 @@ class BlogApp(ctk.CTkToplevel):
         self._create_profile_frame()
         self._create_admin_panel() 
 
-        # NUEVO: Frame para la edición/creación de artículos
         self.article_editor_frame = ctk.CTkFrame(self.content_container, fg_color="white")
         
     def _create_sidebar(self):
@@ -144,31 +130,25 @@ class BlogApp(ctk.CTkToplevel):
 
         ctk.CTkLabel(upload_content_scroll, text="Publicar una Nueva Receta ✍️", font=ctk.CTkFont(size=28, weight="bold")).grid(row=row_counter, column=0, padx=0, pady=(20, 15), sticky="w"); row_counter+=1
         
-        # Título
         ctk.CTkLabel(upload_content_scroll, text="Nombre de la Receta:", font=ctk.CTkFont(size=16, weight="bold")).grid(row=row_counter, column=0, padx=0, pady=(10, 5), sticky="w"); row_counter+=1
         self.upload_title_entry = ctk.CTkEntry(upload_content_scroll, placeholder_text="Ej. Pizza casera con masa madre", height=40)
         self.upload_title_entry.grid(row=row_counter, column=0, padx=0, pady=(0, 15), sticky="ew"); row_counter+=1
         
-        # Contenido (Instrucciones)
         ctk.CTkLabel(upload_content_scroll, text="Instrucciones (Ingredientes y Pasos):", font=ctk.CTkFont(size=16, weight="bold")).grid(row=row_counter, column=0, padx=0, pady=(10, 5), sticky="w"); row_counter+=1
         self.upload_content_textbox = ctk.CTkTextbox(upload_content_scroll, wrap="word", corner_radius=10, border_width=1, border_color="gray70", fg_color="gray95", height=200)
         self.upload_content_textbox.grid(row=row_counter, column=0, padx=0, pady=(0, 15), sticky="ew")
-        
         row_counter+=1
         
-        # Categoría
         ctk.CTkLabel(upload_content_scroll, text="Categoría (Elige una):", font=ctk.CTkFont(size=16, weight="bold")).grid(row=row_counter, column=0, padx=0, pady=(10, 5), sticky="w"); row_counter+=1
         self.categories_button_frame = ctk.CTkFrame(upload_content_scroll, fg_color="transparent")
         self.categories_button_frame.grid(row=row_counter, column=0, padx=0, pady=(0, 20), sticky="w"); row_counter+=1
         self.load_category_buttons()
 
-        # Etiquetas
         ctk.CTkLabel(upload_content_scroll, text="Etiquetas (Elige las que apliquen):", font=ctk.CTkFont(size=16, weight="bold")).grid(row=row_counter, column=0, padx=0, pady=(10, 5), sticky="w"); row_counter+=1
         self.tags_checkbox_frame = ctk.CTkFrame(upload_content_scroll, fg_color="transparent")
         self.tags_checkbox_frame.grid(row=row_counter, column=0, padx=0, pady=(0, 20), sticky="w"); row_counter+=1
         self.load_tag_checkboxes()
 
-        # Botones de Acción (Cancelar y Publicar Receta)
         buttons_frame = ctk.CTkFrame(upload_content_scroll, fg_color="transparent")
         buttons_frame.grid(row=row_counter, column=0, padx=0, pady=20, sticky="e"); row_counter+=1
         
@@ -178,9 +158,9 @@ class BlogApp(ctk.CTkToplevel):
         self.publish_button = ctk.CTkButton(buttons_frame, text="Subir al blog 🚀", command=self.publish_article, corner_radius=8, fg_color="#D32F2F", hover_color="#B71C1C")
         self.publish_button.pack(side="left")
 
-
     def _create_profile_frame(self):
-        self.profile_frame = ProfileFrame(master=self.content_container, main_app=self, corner_radius=0, fg_color="white")
+        # <-- 3. AHORA SE USA LA CLASE IMPORTADA, SIN ARGUMENTOS EXTRA
+        self.profile_frame = ProfileFrame(master=self.content_container, main_app=self)
 
     def _create_admin_panel(self):
         self.admin_panel_frame = ctk.CTkFrame(self.content_container, fg_color="white")
@@ -192,22 +172,19 @@ class BlogApp(ctk.CTkToplevel):
         self.admin_tabview = ctk.CTkTabview(self.admin_panel_frame, fg_color="gray95", corner_radius=10)
         self.admin_tabview.grid(row=1, column=0, padx=20, pady=10, sticky="nsew")
 
-        # --- Pestañas de Administración ---
-        self.tab_articles = self.admin_tabview.add("Artículos") 
+        self.tab_articles = self.admin_tabview.add("Artículos")
         self.tab_categories = self.admin_tabview.add("Categorías")
-        self.tab_tags = self.admin_tabview.add("Tags") 
-        self.tab_comments = self.admin_tabview.add("Comentarios") 
+        self.tab_tags = self.admin_tabview.add("Tags")
+        self.tab_comments = self.admin_tabview.add("Comentarios")
         self.tab_users = self.admin_tabview.add("Usuarios y Roles")
         self.tab_password = self.admin_tabview.add("Contraseña Admin")
         
-        self._setup_articles_tab() 
+        self._setup_articles_tab()
         self._setup_categories_tab()
-        self._setup_tags_tab() 
-        self._setup_comments_tab() 
+        self._setup_tags_tab()
+        self._setup_comments_tab()
         self._setup_users_tab()
         self._setup_password_tab()
-
-    # --- Funciones de soporte ---
 
     def load_category_buttons(self):
         for widget in self.categories_button_frame.winfo_children():
@@ -264,7 +241,7 @@ class BlogApp(ctk.CTkToplevel):
         self.upload_frame.grid_forget()
         self.admin_panel_frame.grid_forget()
         self.profile_frame.grid_forget()
-        self.article_editor_frame.grid_forget() 
+        self.article_editor_frame.grid_forget()
 
         if frame_to_show == self.articles_frame:
             frame_to_show.grid(row=0, column=1, sticky="nsew", padx=30, pady=30)
@@ -273,54 +250,40 @@ class BlogApp(ctk.CTkToplevel):
         else:
              frame_to_show.grid(row=0, column=1, sticky="nsew", padx=30, pady=30)
 
-    # --- IMPLEMENTACIÓN DE LOS MÉTODOS DEL EDITOR DE ARTÍCULOS ---
-    
     def show_article_editor_frame(self, article_id=None):
-        # Muestra el formulario para crear un artículo nuevo o editar uno existente
-        
-        # 1. Mostrar el frame de edición/creación
         self.show_frame(self.article_editor_frame)
         
-        # 2. Limpiar el frame
         for widget in self.article_editor_frame.winfo_children():
             widget.destroy()
             
         is_editing = article_id is not None
         
-        # Configurar la cuadrícula
         self.article_editor_frame.grid_columnconfigure(0, weight=1)
         self.article_editor_frame.grid_columnconfigure(1, weight=1)
-        self.article_editor_frame.grid_rowconfigure(4, weight=1)  
+        self.article_editor_frame.grid_rowconfigure(4, weight=1)
         
-        # --- TÍTULO Y BOTÓN DE REGRESO ---
         title_text = "✏️ Editar Receta" if is_editing else "✨ Publicar Nueva Receta"
         
-        # Contenedor para el título y el botón "Volver"
         header_container = ctk.CTkFrame(self.article_editor_frame, fg_color="transparent")
         header_container.grid(row=0, column=0, columnspan=2, pady=(10, 20), sticky="ew")
         header_container.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(header_container, text=title_text, font=ctk.CTkFont(size=28, weight="bold")).grid(row=0, column=0, sticky="w")
         
-        # Botón para volver al listado de artículos
         btn_back = ctk.CTkButton(
             header_container, 
             text="← Volver al Listado", 
-            command=lambda: self.show_frame(self.tab_articles), 
+            command=lambda: self.show_frame(self.tab_articles),
             fg_color="#616161", 
             hover_color="#424242",
             width=150
         )
         btn_back.grid(row=0, column=1, sticky="e")
         
-        # --- CAMPOS DEL FORMULARIO ---
-        
-        # Título
         ctk.CTkLabel(self.article_editor_frame, text="1. Título de la Receta:", font=ctk.CTkFont(size=14, weight="bold"), anchor="w").grid(row=1, column=0, padx=10, sticky="w")
         self.article_title_entry = ctk.CTkEntry(self.article_editor_frame, placeholder_text="Ej. Sopa Azteca Tradicional", height=35)
         self.article_title_entry.grid(row=2, column=0, padx=10, pady=(0, 15), sticky="ew")
 
-        # Categoría
         self.article_category_var = ctk.StringVar(value="")
         categories = db.get_all_categories() 
         category_map = {name: id for id, name in categories}
@@ -337,7 +300,6 @@ class BlogApp(ctk.CTkToplevel):
         self.article_category_combobox.grid(row=2, column=1, padx=10, pady=(0, 15), sticky="ew")
         self.article_category_combobox.set(category_names[0] if category_names else "Sin Categorías")
         
-        # Contenido (Instrucciones)
         ctk.CTkLabel(self.article_editor_frame, text="3. Contenido (Ingredientes y Pasos):", font=ctk.CTkFont(size=14, weight="bold"), anchor="w").grid(row=3, column=0, columnspan=2, padx=10, sticky="w")
         
         self.article_content_textbox = ctk.CTkTextbox(
@@ -346,12 +308,10 @@ class BlogApp(ctk.CTkToplevel):
             wrap="word",
             corner_radius=10, 
             border_width=2, 
-            border_color="#D32F2F", 
+            border_color="#D32F2F",
             fg_color="#FFFFFF" 
         )
         self.article_content_textbox.grid(row=4, column=0, columnspan=2, padx=10, pady=(0, 20), sticky="nsew")
-        
-        # --- BOTÓN PRINCIPAL DE ACCIÓN ---
         
         action_button_text = "💾 Guardar Cambios" if is_editing else "🚀 Publicar Receta"
         action_command = lambda: self.handle_save_article(article_id, category_map)
@@ -367,8 +327,6 @@ class BlogApp(ctk.CTkToplevel):
         )
         btn_save.grid(row=5, column=0, columnspan=2, padx=10, pady=20, sticky="s")
 
-
-        # --- CARGA DE DATOS PARA EDICIÓN ---
         if is_editing:
             details = db.get_article_details(article_id) 
             if details:
@@ -376,18 +334,15 @@ class BlogApp(ctk.CTkToplevel):
                 self.article_title_entry.insert(0, title)
                 self.article_content_textbox.insert("0.0", content)
                 
-                # Seleccionar la categoría en el ComboBox
                 if category_id:
                     current_category_name = next((name for id, name in categories if id == category_id), None)
                     if current_category_name:
                         self.article_category_combobox.set(current_category_name)
             else:
                 messagebox.showerror("Error", "No se encontraron los detalles del artículo.", parent=self)
-                self.show_frame(self.tab_articles) 
+                self.show_frame(self.tab_articles)
 
-    # 2. El método de (Lógica de guardado)
     def handle_save_article(self, article_id, category_map):
-        """Maneja la lógica de guardar o actualizar el artículo."""
         title = self.article_title_entry.get().strip()
         content = self.article_content_textbox.get("1.0", "end-1c").strip()
         
@@ -403,14 +358,12 @@ class BlogApp(ctk.CTkToplevel):
             return
             
         if article_id:
-            # Lógica de Edición
             if db.update_article(article_id, title, content):
                 db.associate_article_categories(article_id, category_id)
                 messagebox.showinfo("Éxito", "Artículo actualizado correctamente.", parent=self)
             else:
                 messagebox.showerror("Error", "Error al actualizar el artículo.", parent=self)
         else:
-            # Lógica de Creación
             new_id = db.add_article(title, content, self.user_id) 
             if new_id:
                 db.associate_article_categories(new_id, category_id) 
@@ -418,9 +371,9 @@ class BlogApp(ctk.CTkToplevel):
             else:
                 messagebox.showerror("Error", "Error al crear el artículo.", parent=self)
 
-        self.load_articles() # Recarga la vista principal del blog
-        self.load_article_list_for_admin() # Recarga la lista del admin panel
-        self.show_frame(self.admin_tabview) # Vuelve al panel de administración (pestaña activa)
+        self.load_articles()
+        self.load_article_list_for_admin()
+        self.show_frame(self.admin_tabview)
         
     def show_article_detail(self, article):
         for widget in self.article_detail_frame.winfo_children():
@@ -434,7 +387,6 @@ class BlogApp(ctk.CTkToplevel):
         back_button = ctk.CTkButton(container, text="← Volver a las Recetas", command=self.load_articles, fg_color="#D32F2F", hover_color="#B71C1C", corner_radius=8)
         back_button.grid(row=0, column=0, pady=(0, 25), sticky="w")
         
-        # --- Botón de edición visible solo para el autor o admin ---
         if self.is_admin or article.get('user_id') == self.user_id:
              edit_button = ctk.CTkButton(
                 container, 
@@ -445,7 +397,6 @@ class BlogApp(ctk.CTkToplevel):
                 corner_radius=8
             )
              edit_button.grid(row=0, column=0, pady=(0, 25), sticky="e")
-        # --- Fin del botón de edición ---
 
         title_label = ctk.CTkLabel(container, text=article['title'], font=ctk.CTkFont(size=38, weight="bold"), wraplength=800, justify="left")
         title_label.grid(row=1, column=0, pady=(5, 10), sticky="w")
@@ -517,7 +468,7 @@ class BlogApp(ctk.CTkToplevel):
             messagebox.showerror("Error", "Debes seleccionar una categoría.", parent=self)
             return
             
-        new_article_id = db.add_article(title, content, self.user_id) 
+        new_article_id = db.add_article(title, content, self.user_id)
         
         if new_article_id:
             db.associate_article_categories(new_article_id, self.selected_category_id) 
@@ -639,27 +590,19 @@ class BlogApp(ctk.CTkToplevel):
             messagebox.showwarning("Acceso Denegado", "Solo los administradores pueden gestionar la aplicación.", parent=self)
             return
         
-        # Recargar listas antes de mostrar el panel
         self.load_user_list_for_admin() 
         self.load_category_list_for_admin()
         self.load_article_list_for_admin()
-        self.load_tag_list_for_admin() 
-        self.load_comment_list_for_admin() 
+        self.load_tag_list_for_admin()
+        self.load_comment_list_for_admin()
         self.show_frame(self.admin_panel_frame)
         
-    # =================================================================================
-    # --- FUNCIONES DE SETUP Y CARGA DEL ADMIN PANEL  ---
-    # =================================================================================
-
-    # --- PESTAÑA DE ARTÍCULOS ---
-    
     def _setup_articles_tab(self):
         self.tab_articles.grid_columnconfigure(0, weight=1)
         self.tab_articles.grid_rowconfigure(1, weight=1)
 
         ctk.CTkLabel(self.tab_articles, text="Listado de Artículos (Editar/Eliminar)", font=ctk.CTkFont(size=18, weight="bold")).grid(row=0, column=0, padx=20, pady=(20, 10), sticky="w")
         
-        # Botón para crear un nuevo artículo
         btn_new_article = ctk.CTkButton(
             self.tab_articles, 
             text="➕ Nuevo Artículo", 
@@ -695,10 +638,7 @@ class BlogApp(ctk.CTkToplevel):
             actions_frame = ctk.CTkFrame(article_frame, fg_color="transparent")
             actions_frame.grid(row=0, column=1, sticky="e", padx=10)
 
-            # Botón Editar
             ctk.CTkButton(actions_frame, text="Editar", command=lambda id=art_id: self.show_article_editor_frame(id), fg_color="#FFB300", hover_color="#FF8F00", width=70).pack(side="left", padx=5)
-            
-            # Botón Eliminar
             ctk.CTkButton(actions_frame, text="Eliminar", command=lambda id=art_id: self._confirm_delete_article(id), fg_color="#F44336", hover_color="#D32F2F", width=70).pack(side="left", padx=5)
 
     def _confirm_delete_article(self, article_id):
@@ -706,11 +646,9 @@ class BlogApp(ctk.CTkToplevel):
             if db.delete_article(article_id):
                 messagebox.showinfo("Éxito", "Artículo eliminado correctamente.", parent=self)
                 self.load_article_list_for_admin()
-                self.load_articles() 
+                self.load_articles()
             else:
                 messagebox.showerror("Error", "No se pudo eliminar el artículo.", parent=self)
-
-    # --- PESTAÑA DE CATEGORÍAS ---
 
     def _setup_categories_tab(self):
         self.tab_categories.grid_columnconfigure(0, weight=1)
@@ -748,10 +686,7 @@ class BlogApp(ctk.CTkToplevel):
             actions_frame = ctk.CTkFrame(cat_frame, fg_color="transparent")
             actions_frame.grid(row=0, column=1, sticky="e", padx=10)
             
-            # Botón Editar
             ctk.CTkButton(actions_frame, text="Editar", command=lambda id=cat_id, name=cat_name: self._confirm_edit_category(id, name), fg_color="#FFB300", hover_color="#FF8F00", width=70).pack(side="left", padx=5)
-            
-            # Botón Eliminar
             ctk.CTkButton(actions_frame, text="Eliminar", command=lambda id=cat_id: self._confirm_delete_category(id), fg_color="#F44336", hover_color="#D32F2F", width=70).pack(side="left", padx=5)
 
     def add_new_category(self):
@@ -760,7 +695,7 @@ class BlogApp(ctk.CTkToplevel):
             messagebox.showwarning("Advertencia", "El nombre de la categoría no puede estar vacío.", parent=self)
             return
 
-        if db.admin_add_category(cat_name): # Usa la función del CRUD
+        if db.admin_add_category(cat_name):
             self.new_category_entry.delete(0, "end")
             self.load_sidebar_categories()
             self.load_category_buttons()
@@ -776,8 +711,8 @@ class BlogApp(ctk.CTkToplevel):
             if db.update_category(cat_id, new_name.strip()):
                 messagebox.showinfo("Éxito", f"Categoría {cat_id} actualizada a '{new_name}'.", parent=self)
                 self.load_category_list_for_admin()
-                self.load_sidebar_categories() # Recarga el menú lateral
-                self.load_category_buttons() # Recarga los botones de subir receta
+                self.load_sidebar_categories()
+                self.load_category_buttons()
             else:
                 messagebox.showerror("Error", "No se pudo actualizar la categoría.", parent=self)
 
@@ -791,8 +726,6 @@ class BlogApp(ctk.CTkToplevel):
             else:
                 messagebox.showerror("Error", "No se pudo eliminar la categoría. Asegúrese de que no haya dependencias.", parent=self)
 
-    # --- PESTAÑA DE TAGS ---
-    
     def _setup_tags_tab(self):
         self.tab_tags.grid_columnconfigure(0, weight=1)
         self.tab_tags.grid_rowconfigure(3, weight=1)
@@ -829,10 +762,7 @@ class BlogApp(ctk.CTkToplevel):
             actions_frame = ctk.CTkFrame(tag_frame, fg_color="transparent")
             actions_frame.grid(row=0, column=1, sticky="e", padx=10)
             
-            # Botón Editar
             ctk.CTkButton(actions_frame, text="Editar", command=lambda id=tag_id, name=tag_name: self._confirm_edit_tag(id, name), fg_color="#FFB300", hover_color="#FF8F00", width=70).pack(side="left", padx=5)
-            
-            # Botón Eliminar
             ctk.CTkButton(actions_frame, text="Eliminar", command=lambda id=tag_id: self._confirm_delete_tag(id), fg_color="#F44336", hover_color="#D32F2F", width=70).pack(side="left", padx=5)
 
     def add_new_tag(self):
@@ -848,7 +778,7 @@ class BlogApp(ctk.CTkToplevel):
             self.load_tag_list_for_admin()
             messagebox.showinfo("Éxito", f"Etiqueta '{tag_name}' agregada.")
         else:
-            pass 
+            pass
             
     def _confirm_edit_tag(self, tag_id, current_name):
         new_name = ctk.CTkInputDialog(text=f"Editando Etiqueta ID {tag_id}. Ingrese el nuevo nombre:", title="Editar Etiqueta", initial_value=current_name).get_input()
@@ -871,8 +801,6 @@ class BlogApp(ctk.CTkToplevel):
                 self.load_tag_checkboxes()
             else:
                 messagebox.showerror("Error", "No se pudo eliminar la etiqueta.", parent=self)
-
-    # --- PESTAÑA DE COMENTARIOS ---
 
     def _setup_comments_tab(self):
         self.tab_comments.grid_columnconfigure(0, weight=1)
@@ -904,10 +832,8 @@ class BlogApp(ctk.CTkToplevel):
             title_text = f"[{comment_id}] por {name} - en artículo: {article_title}"
             ctk.CTkLabel(comment_frame, text=title_text, anchor="w", font=ctk.CTkFont(size=14, weight="bold")).grid(row=0, column=0, sticky="w", padx=10, pady=(5, 0))
             
-            # Texto del comentario
             ctk.CTkLabel(comment_frame, text=text, anchor="w", justify="left", wraplength=550).grid(row=1, column=0, sticky="w", padx=10, pady=(0, 5))
 
-            # Botón Eliminar
             ctk.CTkButton(comment_frame, text="Eliminar 🗑️", command=lambda id=comment_id: self._confirm_delete_comment(id), fg_color="#F44336", hover_color="#D32F2F", width=90).grid(row=0, column=1, rowspan=2, sticky="e", padx=10)
 
     def _confirm_delete_comment(self, comment_id):
@@ -918,8 +844,6 @@ class BlogApp(ctk.CTkToplevel):
             else:
                 messagebox.showerror("Error", "No se pudo eliminar el comentario.", parent=self)
                 
-    # --- PESTAÑA DE USUARIOS Y ROLES ---
-
     def _setup_users_tab(self):
         self.tab_users.grid_columnconfigure(0, weight=1)
         self.tab_users.grid_rowconfigure(1, weight=1)
@@ -942,7 +866,6 @@ class BlogApp(ctk.CTkToplevel):
             ctk.CTkLabel(self.user_list_scroll_frame, text="No hay usuarios registrados.").pack(pady=10)
             return
 
-        # Encabezado
         header_frame = ctk.CTkFrame(self.user_list_scroll_frame, fg_color="gray75")
         header_frame.grid(row=0, column=0, sticky="ew", padx=5, pady=(5, 0))
         header_frame.grid_columnconfigure(0, weight=1)
@@ -975,7 +898,6 @@ class BlogApp(ctk.CTkToplevel):
             else:
                 ctk.CTkButton(actions_container, text="Hacer Admin", command=lambda id=uid: self._confirm_promote(id), fg_color="#4CAF50", hover_color="#388E3C", width=90).pack(side="left", padx=5)
 
-            # Botón Eliminar Usuario (Nuevo)
             if uid != self.user_id:
                 ctk.CTkButton(actions_container, text="Borrar 🗑️", command=lambda id=uid: self._confirm_delete_user(id), fg_color="#616161", hover_color="#424242", width=70).pack(side="left", padx=5)
 
@@ -1006,8 +928,6 @@ class BlogApp(ctk.CTkToplevel):
             messagebox.showinfo("Éxito", "Rol de administrador eliminado.", parent=self)
             self.load_user_list_for_admin()
             
-    # --- PESTAÑA DE CONTRASEÑA ---
-
     def _setup_password_tab(self):
         self.tab_password.grid_columnconfigure(0, weight=1)
         
