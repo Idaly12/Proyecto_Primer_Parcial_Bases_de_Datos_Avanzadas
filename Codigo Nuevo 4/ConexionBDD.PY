@@ -3,8 +3,8 @@ from tkinter import messagebox
 from datetime import datetime
 
 # --- Configuración de Conexión ---
-DB_USER = "proyecto"
-DB_PASS = "proyecto"
+DB_USER = "basesp"
+DB_PASS = "basesp"
 DB_DSN = "localhost/XEPDB1"
 
 def get_connection():
@@ -102,6 +102,38 @@ def is_user_admin(user_id):
         if cur: cur.close()
         if conn: conn.close()
 
+# --- Agrégala en ConexionBDD.PY ---
+
+def get_articles_by_user(user_id):
+    """Obtiene todos los artículos publicados por un usuario específico."""
+    conn = get_connection()
+    if not conn: return []
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            SELECT a.article_id, a.title, a.article_text, a.article_date, u.username, u.user_id
+            FROM articles a
+            JOIN users u ON a.user_id = u.user_id
+            WHERE a.user_id = :1 ORDER BY a.article_date DESC
+        """, [user_id])
+        
+        results = cur.fetchall()
+        articles = []
+        for row in results:
+            content = row[2].read() if hasattr(row[2], 'read') else row[2]
+            articles.append({
+                "id": row[0], "title": row[1], "text": content,
+                "created_at": row[3].strftime('%d-%m-%Y'), "username": row[4],
+                "user_id": row[5]
+            })
+        return articles
+    except Exception as e:
+        messagebox.showerror("Error", f"Error al cargar las recetas del usuario: {e}")
+        return []
+    finally:
+        if cur: cur.close()
+        if conn: conn.close()
+        
 def update_admin_password(user_id, new_password):
     """Actualiza la contraseña de un usuario llamando al procedimiento 'update_user_password'."""
     conn = get_connection()
