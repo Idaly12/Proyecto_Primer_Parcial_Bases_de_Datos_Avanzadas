@@ -22,7 +22,7 @@ class BlogApp(ctk.CTkToplevel):
         self.is_admin = db.is_user_admin(self.user_id) 
 
         self.grid_rowconfigure(1, weight=1)
-        self.grid_columnconfigure(1, weight=1) 
+        self.grid_columnconfigure(1, weight=1)  
 
         self._create_header()
         self._create_main_content_area()

@@ -15,23 +15,9 @@ def get_connection():
         messagebox.showerror("Error de Conexión", f"No se pudo conectar a la base de datos: {e}")
         return None
 
-# --- Funciones de Usuarios y Administración ---
-def is_user_admin(user_id):
-    """Verifica si el usuario es administrador (IS_ADMIN = 1)."""
-    conn = get_connection()
-    if not conn: return False
-    cur = conn.cursor()
-    try:
-        cur.execute('SELECT "IS_ADMIN" FROM "USERS" WHERE "USER_ID" = :1', [user_id])
-        result = cur.fetchone()
-        
-        return result[0] == 1 if result else False
-    except Exception as e:
-        print(f"Error al verificar rol de admin: {e}")
-        return False
-    finally:
-        if cur: cur.close()
-        if conn: conn.close()
+# ----------------------------------
+# --- FUNCIONES DE USUARIOS (CRUD) ---
+# ----------------------------------
 
 def get_user_info(user_id):
     """Obtiene el nombre de un usuario a partir de su ID."""
@@ -39,7 +25,7 @@ def get_user_info(user_id):
     if not conn: return "Usuario Desconocido"
     cur = conn.cursor()
     try:
-        cur.execute('SELECT "USERNAME" FROM "USERS" WHERE "USER_ID" = :1', [user_id])
+        cur.execute("SELECT username FROM users WHERE user_id = :1", [user_id])
         result = cur.fetchone()
         return result[0] if result else "Usuario Desconocido"
     finally:
@@ -47,26 +33,25 @@ def get_user_info(user_id):
         if conn: conn.close()
 
 def user_exists(email):
-    """Verifica si un usuario existe por su email y retorna sus datos, incluyendo IS_ADMIN."""
+    """Verifica si un usuario existe por su email y retorna sus datos."""
     conn = get_connection()
     if conn is None: return None
     cur = conn.cursor()
     try:
-        # CORRECCIÓN CLAVE: Seleccionamos 5 columnas (IS_ADMIN es la última)
-        cur.execute('SELECT "USER_ID", "USERNAME", "EMAIL", "PASSWORD", "IS_ADMIN" FROM "USERS" WHERE "EMAIL" = :email', {"email": email})
-        return cur.fetchone() # Ahora devuelve una tupla de 5 elementos
+        cur.execute("SELECT user_id, username, email, password FROM users WHERE email = :email", {"email": email})
+        return cur.fetchone()
     finally:
         if cur: cur.close()
         if conn: conn.close()
 
-# ...
-def create_user(username, email, password, admin_key=None):
-    """Crea un nuevo usuario, pasando opcionalmente la clave de administrador."""
+def create_user(username, email, password):
+    """Crea un nuevo usuario llamando al procedimiento almacenado."""
     conn = get_connection()
     if conn is None: return False
     cur = conn.cursor()
     try:
-        cur.callproc("add_user", [username, email, password, admin_key])
+        # Se asume que el procedimiento add_user maneja el rol de administrador
+        cur.callproc("add_user", [username, email, password])
         conn.commit()
         return True
     except Exception as e:
@@ -76,74 +61,29 @@ def create_user(username, email, password, admin_key=None):
         if cur: cur.close()
         if conn: conn.close()
 
-# **** NUEVAS FUNCIONES DE ADMINISTRACIÓN ****
-
-def update_admin_password(user_id, new_password):
-    """Permite al administrador cambiar su propia contraseña."""
-    conn = get_connection()
-    if not conn: return False
-    cur = conn.cursor()
-    try:
-        cur.execute('UPDATE "USERS" SET "PASSWORD" = :new_pass WHERE "USER_ID" = :uid', 
-                    {"new_pass": new_password, "uid": user_id})
-        conn.commit()
-        return True
-    except Exception as e:
-        messagebox.showerror("Error", f"Error al cambiar la contraseña: {e}")
-        return False
-    finally:
-        if cur: cur.close()
-        if conn: conn.close()
-
-def demote_user(user_id):
-    """Cambia el rol de un usuario de Administrador (1) a Normal (0)."""
-    conn = get_connection()
-    if not conn: return False
-    cur = conn.cursor()
-    try:
-        cur.execute('UPDATE "USERS" SET "IS_ADMIN" = 0 WHERE "USER_ID" = :uid', [user_id])
-        conn.commit()
-        return True
-    except Exception as e:
-        messagebox.showerror("Error", f"Error al degradar usuario: {e}")
-        return False
-    finally:
-        if cur: cur.close()
-        if conn: conn.close()
-
-def promote_user(user_id):
-    """Cambia el rol de un usuario de Normal (0) a Administrador (1)."""
-    conn = get_connection()
-    if not conn: return False
-    cur = conn.cursor()
-    try:
-        cur.execute('UPDATE "USERS" SET "IS_ADMIN" = 1 WHERE "USER_ID" = :uid', [user_id])
-        conn.commit()
-        return True
-    except Exception as e:
-        messagebox.showerror("Error", f"Error al promover usuario: {e}")
-        return False
-    finally:
-        if cur: cur.close()
-        if conn: conn.close()
-        
 def get_all_users():
-    """Obtiene una lista de todos los usuarios (ID, Nombre, Email, Rol)."""
+    """Obtiene la lista completa de usuarios con su ID, nombre, email y rol de admin."""
     conn = get_connection()
     if not conn: return []
     cur = conn.cursor()
     try:
-        cur.execute('SELECT "USER_ID", "USERNAME", "EMAIL", "IS_ADMIN" FROM "USERS" ORDER BY "USERNAME"')
-        return cur.fetchall() 
+        cur.execute("""
+            SELECT user_id, username, email, is_admin
+            FROM users
+            ORDER BY username
+        """)
+        return cur.fetchall()
     except Exception as e:
-        messagebox.showerror("Error", f"Error al obtener lista de usuarios: {e}")
+        print(f"Error al cargar la lista de usuarios para admin: {e}")
         return []
     finally:
         if cur: cur.close()
         if conn: conn.close()
 
+# -----------------------------------
+# --- FUNCIONES DE ARTÍCULOS (CRUD) ---
+# -----------------------------------
 
-# --- Funciones de Artículos ---
 def create_article(title, text, user_id):
     conn = get_connection()
     if not conn: return
@@ -151,6 +91,7 @@ def create_article(title, text, user_id):
     try:
         cur.callproc("add_article", [title, text, user_id])
         conn.commit()
+        messagebox.showinfo("Éxito", "Receta publicada correctamente")
     except Exception as e:
         messagebox.showerror("Error", f"Error al publicar receta: {e}")
     finally:
@@ -163,10 +104,10 @@ def get_all_articles():
     cur = conn.cursor()
     try:
         cur.execute("""
-             SELECT a."ARTICLE_ID", a."TITLE", a."ARTICLE_TEXT", a."ARTICLE_DATE", u."USERNAME", u."USER_ID"
-             FROM "ARTICLES" a JOIN "USERS" u ON a."USER_ID" = u."USER_ID"
-             ORDER BY a."ARTICLE_DATE" DESC
-         """)
+            SELECT a.article_id, a.title, a.article_text, a.article_date, u.username, u.user_id
+            FROM articles a JOIN users u ON a.user_id = u.user_id
+            ORDER BY a.article_date DESC
+        """)
         results = cur.fetchall()
         articles = []
         for row in results:
@@ -190,10 +131,10 @@ def get_articles_by_user(user_id):
     cur = conn.cursor()
     try:
         cur.execute("""
-             SELECT a."ARTICLE_ID", a."TITLE", a."ARTICLE_TEXT", a."ARTICLE_DATE", u."USERNAME", u."USER_ID"
-             FROM "ARTICLES" a JOIN "USERS" u ON a."USER_ID" = u."USER_ID"
-             WHERE a."USER_ID" = :1 ORDER BY a."ARTICLE_DATE" DESC
-         """, [user_id])
+            SELECT a.article_id, a.title, a.article_text, a.article_date, u.username, u.user_id
+            FROM articles a JOIN users u ON a.user_id = u.user_id
+            WHERE a.user_id = :1 ORDER BY a.article_date DESC
+        """, [user_id])
         results = cur.fetchall()
         articles = []
         for row in results:
@@ -217,12 +158,12 @@ def get_articles_by_category(category_id):
     cur = conn.cursor()
     try:
         cur.execute("""
-             SELECT a."ARTICLE_ID", a."TITLE", a."ARTICLE_TEXT", a."ARTICLE_DATE", u."USERNAME", u."USER_ID"
-             FROM "ARTICLES" a
-             JOIN "USERS" u ON a."USER_ID" = u."USER_ID"
-             JOIN "ARTICLE_CATEGORIES" ac ON a."ARTICLE_ID" = ac."ARTICLE_ID"
-             WHERE ac."CATEGORY_ID" = :1 ORDER BY a."ARTICLE_DATE" DESC
-         """, [category_id])
+            SELECT a.article_id, a.title, a.article_text, a.article_date, u.username, u.user_id
+            FROM articles a
+            JOIN users u ON a.user_id = u.user_id
+            JOIN article_categories ac ON a.article_id = ac.article_id
+            WHERE ac.category_id = :1 ORDER BY a.article_date DESC
+        """, [category_id])
         results = cur.fetchall()
         articles = []
         for row in results:
@@ -246,8 +187,8 @@ def get_latest_article_id_by_user(user_id):
     cur = conn.cursor()
     try:
         cur.execute("""
-            SELECT "ARTICLE_ID" FROM "ARTICLES"
-            WHERE "USER_ID" = :1 ORDER BY "ARTICLE_DATE" DESC
+            SELECT article_id FROM articles
+            WHERE user_id = :1 ORDER BY article_date DESC
             FETCH FIRST 1 ROWS ONLY
         """, [user_id])
         result = cur.fetchone()
@@ -255,35 +196,219 @@ def get_latest_article_id_by_user(user_id):
     finally:
         if cur: cur.close()
         if conn: conn.close()
-
-# --- Funciones de Categorías (CRUD por Admin) ---
-def get_all_categories():
+        
+def get_articles_by_tag(tag_id):
+    """Obtiene artículos filtrados por una etiqueta (tag)."""
     conn = get_connection()
-    if not conn: 
-        return []
+    if not conn: return []
     cur = conn.cursor()
     try:
-        cur.execute('SELECT "CATEGORY_ID", "CATEGORY_NAME" FROM "CATEGORIES" ORDER BY "CATEGORY_NAME"')
-        
-        categories = cur.fetchall()
-        return categories
+        cur.execute("""
+            SELECT a.article_id, a.title, a.article_text, a.article_date, u.username, u.user_id
+            FROM articles a
+            JOIN users u ON a.user_id = u.user_id
+            JOIN article_tags at ON a.article_id = at.article_id
+            WHERE at.tag_id = :1 ORDER BY a.article_date DESC
+        """, [tag_id])
+        results = cur.fetchall()
+        articles = []
+        for row in results:
+            content = row[2].read() if hasattr(row[2], 'read') else row[2]
+            articles.append({
+                "id": row[0], "title": row[1], "text": content,
+                "created_at": row[3].strftime('%d-%m-%Y'), "username": row[4],
+                "user_id": row[5]
+            })
+        return articles
     except Exception as e:
-        messagebox.showerror("Error de Base de Datos (Categorías)", f"Fallo al obtener categorías: {e}")
+        messagebox.showerror("Error", f"Error al filtrar recetas por tag: {e}")
         return []
     finally:
         if cur: cur.close()
         if conn: conn.close()
 
-def add_category(category_name):
-    """Agrega una nueva categoría llamando al procedimiento almacenado."""
+def get_tags_for_article(article_id):
+    """Obtiene los nombres de los tags asociados a un artículo específico."""
+    conn = get_connection()
+    if not conn: return []
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            SELECT t.tag_name FROM tags t
+            JOIN article_tags at ON t.tag_id = at.tag_id
+            WHERE at.article_id = :1
+            ORDER BY t.tag_name
+        """, [article_id])
+        return [row[0] for row in cur.fetchall()]
+    except Exception as e:
+        print(f"Error al obtener tags para el artículo {article_id}: {e}")
+        return []
+    finally:
+        if cur: cur.close()
+        if conn: conn.close()
+
+def associate_article_tags(article_id, tag_ids):
+    """Asocia múltiples tags a un artículo llamando al procedimiento almacenado."""
     conn = get_connection()
     if not conn: return
     cur = conn.cursor()
     try:
-        cur.callproc("add_category", [category_name])
+        for tag_id in tag_ids:
+            # Llama al procedimiento que creaste en Oracle: add_article_tag
+            cur.callproc("add_article_tag", [article_id, tag_id]) 
         conn.commit()
     except Exception as e:
-        messagebox.showerror("Error", f"Error al insertar categoría: {e}")
+        messagebox.showerror("Error de Asociación", f"No se pudo asociar la etiqueta: {e}")
+    finally:
+        if cur: cur.close()
+        if conn: conn.close()
+
+
+# --- FUNCIONES DE ADMINISTRACIÓN FALTANTES ---
+
+def update_admin_password(user_id, new_password):
+    """
+    Actualiza la contraseña de un usuario (asumiendo que solo se usa para el administrador).
+    Requiere que el procedimiento almacenado 'update_user_password' exista en Oracle.
+    """
+    conn = get_connection()
+    if conn is None: return False
+    cur = conn.cursor()
+    try:
+        # Debes asegurarte de que este procedimiento exista en Oracle:
+        cur.callproc("update_user_password", [user_id, new_password])
+        conn.commit()
+        return True
+    except Exception as e:
+        messagebox.showerror("Error de Contraseña", f"Error al actualizar contraseña: {e}")
+        return False
+    finally:
+        if cur: cur.close()
+        if conn: conn.close()
+
+def promote_user(user_id):
+    """Promueve un usuario al rol de administrador (IS_ADMIN = 1)."""
+    conn = get_connection()
+    if conn is None: return False
+    cur = conn.cursor()
+    try:
+        # Ejecuta la actualización directamente en SQL (o usa un procedimiento si lo creaste)
+        cur.execute("UPDATE users SET is_admin = 1 WHERE user_id = :1", [user_id])
+        conn.commit()
+        return True
+    except Exception as e:
+        messagebox.showerror("Error de Rol", f"Error al promover usuario: {e}")
+        return False
+    finally:
+        if cur: cur.close()
+        if conn: conn.close()
+
+def demote_user(user_id):
+    """Degrada un usuario al rol normal (IS_ADMIN = 0)."""
+    conn = get_connection()
+    if conn is None: return False
+    cur = conn.cursor()
+    try:
+        # Ejecuta la actualización directamente en SQL (o usa un procedimiento si lo creaste)
+        cur.execute("UPDATE users SET is_admin = 0 WHERE user_id = :1", [user_id])
+        conn.commit()
+        return True
+    except Exception as e:
+        messagebox.showerror("Error de Rol", f"Error al degradar usuario: {e}")
+        return False
+    finally:
+        if cur: cur.close()
+        if conn: conn.close()
+
+# -----------------------------------
+# --- FUNCIONES DE COMENTARIOS (CRUD) ---
+# -----------------------------------
+
+def add_comment(article_id, user_id, text):
+    conn = get_connection()
+    if not conn: return
+    cur = conn.cursor()
+    try:
+        cur.callproc("add_comment", [article_id, user_id, text])
+        conn.commit()
+        messagebox.showinfo("Éxito", "Comentario publicado correctamente.")
+    except Exception as e:
+        messagebox.showerror("Error de Base de Datos", f"No se pudo añadir el comentario: {e}")
+    finally:
+        if cur: cur.close()
+        if conn: conn.close()
+
+def get_comments(article_id):
+    conn = get_connection()
+    if not conn: return []
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            SELECT name, url, text, created_at
+            FROM comments WHERE article_id = :id ORDER BY created_at ASC
+        """, {'id': article_id})
+        return [{
+            "username": row[0], "user_id": int(row[1]) if row[1] else None,
+            "text": row[2].read() if hasattr(row[2], 'read') else row[2],
+            "created_at": row[3].strftime('%d-%m-%Y %H:%M') if row[3] else ''
+        } for row in cur.fetchall()]
+    except Exception as e:
+        print(f"Error al obtener comentarios: {e}")
+        return []
+    finally:
+        if cur: cur.close()
+        if conn: conn.close()
+
+
+# ----------------------------------
+# --- FUNCIONES DE ADMINISTRACIÓN ---
+# ----------------------------------
+
+def is_user_admin(user_id):
+    """Verifica si un usuario es administrador (IS_ADMIN = 1)."""
+    conn = get_connection()
+    if conn is None: return False
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT is_admin FROM users WHERE user_id = :1", [user_id])
+        result = cur.fetchone()
+        return result[0] == 1 if result else False
+    except Exception as e:
+        print(f"Error al verificar rol de administrador: {e}")
+        return False
+    finally:
+        if cur: cur.close()
+        if conn: conn.close()
+
+def admin_add_category(category_name):
+    """Llama al procedimiento almacenado para agregar una nueva categoría."""
+    conn = get_connection()
+    if conn is None: return False
+    cur = conn.cursor()
+    try:
+        cur.callproc("add_category", [category_name])
+        conn.commit()
+        return True
+    except Exception as e:
+        # Nota: El procedimiento almacenado puede lanzar un error -20005
+        messagebox.showerror("Error de Admin", f"Error al insertar categoría: {e}")
+        return False
+    finally:
+        if cur: cur.close()
+        if conn: conn.close()
+
+
+# ----------------------------------
+# --- FUNCIONES DE CATEGORÍAS (CRUD) ---
+# ----------------------------------
+
+def get_all_categories():
+    conn = get_connection()
+    if not conn: return []
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT category_id, category_name FROM categories ORDER BY category_name")
+        return cur.fetchall()
     finally:
         if cur: cur.close()
         if conn: conn.close()
@@ -302,114 +427,20 @@ def associate_article_categories(article_id, category_ids):
         if cur: cur.close()
         if conn: conn.close()
 
-# --- Funciones de Comentarios ---
-def add_comment(article_id, user_id, text):
-    conn = get_connection()
-    if not conn: return
-    cur = conn.cursor()
-    try:
-        cur.callproc("add_comment", [article_id, user_id, text])
-        conn.commit()
-    except Exception as e:
-        messagebox.showerror("Error de Base de Datos", f"No se pudo añadir el comentario: {e}")
-    finally:
-        if cur: cur.close()
-        if conn: conn.close()
+# --------------------------------
+# --- FUNCIONES DE ETIQUETAS (TAGS) ---
+# --------------------------------
 
-def get_comments(article_id):
-    conn = get_connection()
-    if not conn: return []
-    cur = conn.cursor()
-    try:
-        cur.execute("""
-             SELECT c."NAME", c."USER_ID", c."TEXT", c."CREATED_AT"
-             FROM "COMMENTS" c WHERE c."ARTICLE_ID" = :id ORDER BY c."CREATED_AT" ASC
-         """, {'id': article_id})
-        return [{
-            "username": row[0], "user_id": int(row[1]) if row[1] else None,
-            "text": row[2].read() if hasattr(row[2], 'read') else row[2],
-            "created_at": row[3].strftime('%d-%m-%Y %H:%M') if row[3] else ''
-        } for row in cur.fetchall()]
-    except Exception as e:
-        print(f"Error al obtener comentarios: {e}")
-        return []
-    finally:
-        if cur: cur.close()
-        if conn: conn.close()
-
-# --- Funciones de Etiquetas (Tags) ---
 def get_all_tags():
-    """Obtiene todas las etiquetas de la base de datos."""
+    """Obtiene todos los tags disponibles (necesario para la sidebar)."""
     conn = get_connection()
     if not conn: return []
     cur = conn.cursor()
     try:
-        cur.execute('SELECT "TAG_ID", "TAG_NAME" FROM "TAGS" ORDER BY "TAG_NAME"')
+        cur.execute("SELECT tag_id, tag_name FROM tags ORDER BY tag_name")
         return cur.fetchall()
-    finally:
-        if cur: cur.close()
-        if conn: conn.close()
-
-def associate_article_tags(article_id, tag_ids):
-    """Asocia un artículo con una lista de IDs de etiquetas."""
-    conn = get_connection()
-    if not conn: return
-    cur = conn.cursor()
-    try:
-        for tag_id in tag_ids:
-            cur.callproc("add_article_tag", [article_id, tag_id])
-        conn.commit()
     except Exception as e:
-        messagebox.showerror("Error de Asociación", f"No se pudo asociar la etiqueta: {e}")
-    finally:
-        if cur: cur.close()
-        if conn: conn.close()
-
-def get_tags_for_article(article_id):
-    """Obtiene las etiquetas de un artículo específico."""
-    conn = get_connection()
-    if not conn: return []
-    cur = conn.cursor()
-    try:
-        cur.execute("""
-             SELECT t."TAG_NAME"
-             FROM "TAGS" t
-             JOIN "ARTICLE_TAGS" at ON t."TAG_ID" = at."TAG_ID"
-             WHERE at."ARTICLE_ID" = :1
-         """, [article_id])
-        return [row[0] for row in cur.fetchall()]
-    except Exception as e:
-        print(f"Error al obtener etiquetas del artículo: {e}")
-        return []
-    finally:
-        if cur: cur.close()
-        if conn: conn.close()
-
-def get_articles_by_tag(tag_id):
-    """Obtiene todos los artículos asociados a una etiqueta específica."""
-    conn = get_connection()
-    if not conn: return []
-    cur = conn.cursor()
-    try:
-        cur.execute("""
-             SELECT a."ARTICLE_ID", a."TITLE", a."ARTICLE_TEXT", a."ARTICLE_DATE", u."USERNAME", u."USER_ID"
-             FROM "ARTICLES" a
-             JOIN "USERS" u ON a."USER_ID" = u."USER_ID"
-             JOIN "ARTICLE_TAGS" at ON a."ARTICLE_ID" = at."ARTICLE_ID"
-             WHERE at."TAG_ID" = :1 ORDER BY a."ARTICLE_DATE" DESC
-         """, [tag_id])
-        results = cur.fetchall()
-        articles = []
-        for row in results:
-            content = row[2].read() if hasattr(row[2], 'read') else row[2]
-            articles.append({
-                "id": row[0], "title": row[1], "text": content,
-                "created_at": row[3].strftime('%d-%m-%Y'), "username": row[4],
-                "user_id": row[5]
-            })
-        return articles
-    except Exception as e:
-        messagebox.showerror("Error", f"Error al filtrar recetas por etiqueta: {e}")
+        print(f"Error al cargar tags: {e}") 
         return []
     finally:
         if cur: cur.close()
