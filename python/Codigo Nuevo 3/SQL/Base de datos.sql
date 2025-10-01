@@ -1,3 +1,13 @@
+SELECT * FROM USERS
+
+
+
+
+
+
+
+
+
 --------------------------------------------------------------------------------
 -- ELIMINAR TABLAS (DROP)
 --------------------------------------------------------------------------------
@@ -283,6 +293,10 @@ EXCEPTION
 END;
 /
 
+--------------------------------------------------------------------------------
+-- 5. INSERCIÓN DE DATOS DE EJEMPLO
+--------------------------------------------------------------------------------
+
 --Ejemplos Categorias
 INSERT INTO categories (category_name) VALUES ('Comida Americana');
 INSERT INTO categories (category_name) VALUES ('Comida Mexicana');
@@ -292,4 +306,14 @@ INSERT INTO categories (category_name) VALUES ('Comida Italiana');
 INSERT INTO categories (category_name) VALUES ('Comida Japonesa');
 INSERT INTO categories (category_name) VALUES ('Comida China');
 
-COMMIT; 
+-- >>>>>> AÑADIDO <<<<<< --
+-- Ejemplos Tags
+INSERT INTO tags (tag_name) VALUES ('Postres');
+INSERT INTO tags (tag_name) VALUES ('Ensaladas');
+INSERT INTO tags (tag_name) VALUES ('Guisos');
+INSERT INTO tags (tag_name) VALUES ('Sopas');
+INSERT INTO tags (tag_name) VALUES ('Vegano');
+INSERT INTO tags (tag_name) VALUES ('Sin Gluten');
+
+-- Guardar los cambios permanentemente
+COMMIT;
