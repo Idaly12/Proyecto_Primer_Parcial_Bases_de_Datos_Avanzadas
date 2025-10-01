@@ -1,10 +1,6 @@
 --------------------------------------------------------------------------------
--- 1. ELIMINAR TABLAS Y PROCEDIMIENTOS EXISTENTES (DROP)
+-- 1. ELIMINAR TABLAS EXISTENTES 
 --------------------------------------------------------------------------------
-
--- La eliminación de procedimientos nuevos (update_user_password, promote_user, demote_user)
--- a veces falla si se ejecuta el script por primera vez.
--- Dejamos las eliminaciones de tablas que son más críticas.
 
 DROP TABLE article_categories CASCADE CONSTRAINTS;
 DROP TABLE article_tags CASCADE CONSTRAINTS;
@@ -14,60 +10,8 @@ DROP TABLE categories CASCADE CONSTRAINTS;
 DROP TABLE tags CASCADE CONSTRAINTS;
 DROP TABLE users CASCADE CONSTRAINTS;
 
--- Intentar borrar procedimientos existentes (si fallan, no es crítico)
-BEGIN
-    EXECUTE IMMEDIATE 'DROP PROCEDURE add_user';
-EXCEPTION WHEN OTHERS THEN NULL;
-END;
-/
-BEGIN
-    EXECUTE IMMEDIATE 'DROP PROCEDURE add_article';
-EXCEPTION WHEN OTHERS THEN NULL;
-END;
-/
-BEGIN
-    EXECUTE IMMEDIATE 'DROP PROCEDURE add_comment';
-EXCEPTION WHEN OTHERS THEN NULL;
-END;
-/
-BEGIN
-    EXECUTE IMMEDIATE 'DROP PROCEDURE add_tag';
-EXCEPTION WHEN OTHERS THEN NULL;
-END;
-/
-BEGIN
-    EXECUTE IMMEDIATE 'DROP PROCEDURE add_category';
-EXCEPTION WHEN OTHERS THEN NULL;
-END;
-/
-BEGIN
-    EXECUTE IMMEDIATE 'DROP PROCEDURE add_article_tag';
-EXCEPTION WHEN OTHERS THEN NULL;
-END;
-/
-BEGIN
-    EXECUTE IMMEDIATE 'DROP PROCEDURE add_article_category';
-EXCEPTION WHEN OTHERS THEN NULL;
-END;
-/
-BEGIN
-    EXECUTE IMMEDIATE 'DROP PROCEDURE update_user_password';
-EXCEPTION WHEN OTHERS THEN NULL;
-END;
-/
-BEGIN
-    EXECUTE IMMEDIATE 'DROP PROCEDURE promote_user';
-EXCEPTION WHEN OTHERS THEN NULL;
-END;
-/
-BEGIN
-    EXECUTE IMMEDIATE 'DROP PROCEDURE demote_user';
-EXCEPTION WHEN OTHERS THEN NULL;
-END;
-/
-
 -------------------------------------------------------------------------------
--- 2. CREACIÓN DE TABLAS (LIMPIAS DE CARACTERES OCULTOS)
+-- 2. CREACIÓN DE TABLAS 
 --------------------------------------------------------------------------------
 
 -- Tabla de Usuarios
@@ -76,7 +20,7 @@ CREATE TABLE users (
     username VARCHAR2(100) NOT NULL UNIQUE,
     email VARCHAR2(200) NOT NULL UNIQUE,
     password VARCHAR2(200) NOT NULL,
-    -- COLUMNA DE ROL: 1 = Admin, 0 = Normal (Valor por defecto)
+    -- 1 = Admin, 0 = Normal 
     IS_ADMIN NUMBER(1) DEFAULT 0 NOT NULL, 
     CONSTRAINT chk_username CHECK (LENGTH(username) >= 3)
 );
@@ -138,7 +82,7 @@ CREATE TABLE article_categories (
 
 
 --------------------------------------------------------------------------------
--- 3. PROCEDIMIENTOS ALMACENADOS (FUNCIONES CRUD BÁSICAS)
+-- 3. PROCEDIMIENTOS ALMACENADOS
 --------------------------------------------------------------------------------
 
 -- Agregar un nuevo usuario (Contiene la CLAVE SECRETA para admin)
@@ -254,6 +198,31 @@ EXCEPTION
 END;
 /
 
+--OBTENER CATEGORÍAS ORDENADAS
+
+CREATE OR REPLACE PACKAGE types
+AS
+    TYPE ref_cursor IS REF CURSOR;
+END types;
+/
+
+-- Función para obtener todas las categorías ordenadas alfabéticamente
+CREATE OR REPLACE FUNCTION get_all_categories
+    RETURN types.ref_cursor
+AS
+    categories_cursor types.ref_cursor;
+BEGIN
+    OPEN categories_cursor FOR
+        SELECT category_id, category_name
+        FROM categories
+        ORDER BY category_name ASC; 
+    RETURN categories_cursor;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20015, 'Error al obtener categorías: ' || SQLERRM);
+END;
+/
+
 --------------------------------------------------------------------------------
 -- 4. PROCEDIMIENTOS DE ADMINISTRACIÓN
 --------------------------------------------------------------------------------
@@ -273,7 +242,7 @@ EXCEPTION
 END;
 /
 
--- Procedimiento para ascender (promover) un usuario a administrador (IS_ADMIN = 1)
+-- Procedimiento para ascender un usuario a administrador (IS_ADMIN = 1)
 CREATE OR REPLACE PROCEDURE promote_user(
     p_user_id IN NUMBER
 ) AS
@@ -289,7 +258,7 @@ EXCEPTION
 END;
 /
 
--- Procedimiento para degradar (demote) un usuario a rol normal (IS_ADMIN = 0)
+-- Procedimiento para degradar un usuario a rol normal (IS_ADMIN = 0)
 CREATE OR REPLACE PROCEDURE demote_user(
     p_user_id IN NUMBER
 ) AS
@@ -319,18 +288,14 @@ INSERT INTO tags (tag_name) VALUES ('Vegano');
 INSERT INTO tags (tag_name) VALUES ('Sin Gluten');
 
 
---------------------------------------------------------------------------------
--- 6. FINALIZAR TRANSACCIÓN
---------------------------------------------------------------------------------
-
-COMMIT;
--- 1. Regístrate en la aplicación como un usuario normal (Ej: admin@miblog.com).
--- 2. En SQL Developer, ejecuta:
--- 1. Actualiza el rol IS_ADMIN a 1 (Administrador) para tu cuenta.
---    Usamos el USER_ID que se ve en tu imagen (ID = 1).
+-- Hacer que el user_id = 1 sea admin
+EXECUTE add_user('Admin', 'admin@gmail.com', 'miblog');
 UPDATE users
 SET IS_ADMIN = 1
 WHERE USER_ID = 1;
 
--- 2. Confirma la transacción.
+--------------------------------------------------------------------------------
+-- 6. FINALIZAR TRANSACCIÓN
+--------------------------------------------------------------------------------
+
 COMMIT;
